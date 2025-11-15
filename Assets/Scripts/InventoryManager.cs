@@ -1,30 +1,53 @@
+// using System.Collections;
+// using System.Collections.Generics;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class InventoryManager : MonoBehaviour
 {
-    public bool isOpened;
-    public GameObject UIPanel;
+   [SerializeField] private UIDocument uiDoc;
+   private VisualElement rootEl;
+   private VisualElement inventoryEl;
+   private string activeClass = "InventoryPanel-active";
+   private bool isOpen = false;
 
-    void Start()
+   private void OnEnable()
     {
-        UIPanel.SetActive(false);
+        rootEl = uiDoc.rootVisualElement;
+        inventoryEl = rootEl.Q(className: "InventoryPanel");
+    
     }
 
-    void Update()
+    private void Update()
     {
         if (Input.GetKeyDown(KeyCode.I))
         {
-            isOpened = !isOpened;
-            if (isOpened)
+            if (!isOpen)
             {
-                UIPanel.SetActive(true);
-                // crosshair.SetActive(false);
+                Open();
+                isOpen = true;
             }
             else
             {
-                UIPanel.SetActive(false);
-                // crosshair.SetActive(true);
+                Close();
+                isOpen = false;
             }
+            
         }
+        // if ((Input.GetKeyDown(KeyCode.I) || Input.GetKeyDown(KeyCode.Escape)) && isOpen == true)
+        // {
+        //     Close();
+        //     isOpen = false;
+        // }
     }
+    private void Open()
+    {
+        inventoryEl.AddToClassList(activeClass);
+    }
+
+    private void Close()
+    {
+        inventoryEl.RemoveFromClassList(activeClass);
+    }
+   
 }

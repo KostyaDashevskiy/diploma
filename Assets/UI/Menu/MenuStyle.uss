@@ -1,0 +1,47 @@
+.MenuPanel {
+    opacity: 1;
+    transition-property: all;
+    transition-duration: 100ms;
+}
+
+.MenuPanel.MenuPanel-active {
+    opacity: 1;
+}
+.menu-button {
+    align-items: auto;
+    max-width: none;
+    align-self: center;
+    justify-content: flex-start;
+    align-content: auto;
+    flex-grow: 0;
+    flex-shrink: 1;
+    flex-direction: column;
+    min-width: 50%;
+    -unity-font-definition: url("project://database/Assets/Fonts/BENZIN-REGULAR.TTF?fileID=12800000&guid=ce59140113ebe9f44aea99dd91340ffe&type=3#BENZIN-REGULAR");
+    color: rgb(255, 255, 255);
+    background-color: rgba(0, 0, 0, 0.98);
+    border-left-color: rgba(0, 0, 0, 0);
+    border-right-color: rgba(0, 0, 0, 0);
+    border-top-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    border-bottom-left-radius: 30px;
+    width: 100%;
+    height: 5%;
+    font-size: 18px;
+    margin-top: 7px;
+    margin-right: 7px;
+    margin-bottom: 7px;
+    margin-left: 7px;
+}
+
+.menu-button:hover {
+    background-color: rgb(255, 255, 255);
+    -unity-text-outline-color: rgba(0, 0, 0, 0);
+    color: rgb(0, 0, 0);
+    scale: 1.1 1;
+    transition-property: scale;
+    transition-duration: 0.15s;
+}

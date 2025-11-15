@@ -1,0 +1,10 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Menu/MenuStyle.uss?fileID=7433441132597879392&amp;guid=e37398b5384660c4e85ab9407107692a&amp;type=3#MenuStyle" />
+    <ui:VisualElement name="VisualElement" class="MenuPanel" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0.5); width: 26%; align-items: auto; align-self: center;">
+        <ui:VisualElement style="flex-grow: 1; flex-direction: column; align-self: center; align-items: auto; align-content: auto; justify-content: center;">
+            <ui:Button text="Продолжить" class="menu-button" />
+            <ui:Button text="Настройки" class="menu-button" />
+            <ui:Button text="Выйти из игры" class="menu-button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

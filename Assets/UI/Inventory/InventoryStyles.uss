@@ -1,0 +1,9 @@
+.InventoryPanel {
+    opacity: 0;
+    transition-property: all;
+    transition-duration: 100ms;
+}
+
+.InventoryPanel.InventoryPanel-active {
+    opacity: 1;
+}
