@@ -27,13 +27,18 @@ public class InputManager : MonoBehaviour
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    // void FixedUpdate()
+    // {
+    //     motor.ProcessMove(onFoot.Movement.ReadValue<Vector2>());
+    // }
+
+    // private void LateUpdate()
+    // {
+    //     look.ProcessLook(onFoot.Look.ReadValue<Vector2>());
+    // }
+    void Update()
     {
         motor.ProcessMove(onFoot.Movement.ReadValue<Vector2>());
-    }
-
-    private void LateUpdate()
-    {
         look.ProcessLook(onFoot.Look.ReadValue<Vector2>());
     }
 
