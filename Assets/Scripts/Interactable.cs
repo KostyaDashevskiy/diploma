@@ -2,14 +2,21 @@ using UnityEngine;
 
 public abstract class Interactable : MonoBehaviour
 {
-    public string promtMessage;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void BaseInteract()
+    public string promptMessage;
+    
+    // Этот метод позволяет менять текст (например: если руки пусты - "Взять", если полные - "Вставить")
+    public virtual string GetPromptMessage(PlayerInteract player)
     {
-        Interact();
+        return promptMessage;
     }
-    protected virtual void Interact()
+
+    public void BaseInteract(PlayerInteract player)
     {
-        
+        Interact(player);
+    }
+
+    protected virtual void Interact(PlayerInteract player)
+    {
+        // Базовая логика переопределяется в наследниках
     }
 }
