@@ -1,71 +1,78 @@
 using System.Collections.Generic;
 using UnityEngine;
-
 public class AssemblyManager : MonoBehaviour
 {
-    // Паттерн Singleton для глобального доступа
-    public static AssemblyManager Instance { get; private set; }[Header("Текущая сборка")]
-    public List<PartData> installedParts = new List<PartData>();
-    
-    public float currentPowerSupplyCapacity = 0f; // Мощность установленного БП
-    public float currentTotalTDP = 0f;            // Суммарное потребление
+public static AssemblyManager Instance { get; private set; }
+[Header("База данных (JSON)")]
+public TextAsset jsonFile; // Сюда перетащим наш PartsDB.json в инспекторе
 
-    private void Awake()
+// Словарь для быстрого поиска детали по её partID
+public Dictionary<string, PartData> database = new Dictionary<string, PartData>();
+
+[Header("Текущая сборка")]
+public List<PartData> installedParts = new List<PartData>();
+public float currentPowerSupplyCapacity = 0f; 
+public float currentTotalTDP = 0f;            
+
+private void Awake()
+{
+    if (Instance == null) Instance = this;
+    else Destroy(gameObject);
+
+    LoadJSONDatabase();
+}
+
+// МЕТОД ЗАГРУЗКИ ИЗ ДИПЛОМА
+private void LoadJSONDatabase()
+{
+    if (jsonFile != null)
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        PartDatabase db = JsonUtility.FromJson<PartDatabase>(jsonFile.text);
+        foreach (PartData part in db.parts)
+        {
+            // Записываем деталь в словарь (Ключ = partID, Значение = сама деталь)
+            if (!database.ContainsKey(part.partID))
+            {
+                database.Add(part.partID, part);
+            }
+        }
+        Debug.Log($"<color=green>База данных JSON загружена! Найдено деталей: {database.Count}</color>");
     }
-
-    // Добавление установленной детали в базу
-    public void AddPartToAssembly(PartData newPart, ItemType type)
+    else
     {
-        installedParts.Add(newPart);
-
-        // Если это блок питания - записываем его мощность
-        if (type == ItemType.PowerSupply)
-        {
-            currentPowerSupplyCapacity = newPart.tdp;
-        }
-        else
-        {
-            // Иначе прибавляем потребление к общей сумме
-            currentTotalTDP += newPart.tdp;
-        }
-
-        CheckPowerBalance();
+        Debug.LogError("JSON ФАЙЛ НЕ НАЗНАЧЕН В ASSEMBLY MANAGER!");
     }
+}
 
-    // Метод для удаления детали из базы (когда мы вытаскиваем её из слота)
-    public void RemovePartFromAssembly(PartData removedPart, ItemType type)
-    {
-        installedParts.Remove(removedPart);
+// Метод, который отдаст данные по ID
+public PartData GetPartInfo(string searchID)
+{
+    if (database.ContainsKey(searchID)) return database[searchID];
+    return null;
+}
 
-        if (type == ItemType.PowerSupply)
-            currentPowerSupplyCapacity = 0f;
-        else
-            currentTotalTDP -= removedPart.tdp;
+public void AddPartToAssembly(PartData newPart, ItemType type)
+{
+    installedParts.Add(newPart);
+    if (type == ItemType.PowerSupply) currentPowerSupplyCapacity = newPart.tdp;
+    else currentTotalTDP += newPart.tdp;
+    CheckPowerBalance();
+}
 
-        CheckPowerBalance();
-    }
+public void RemovePartFromAssembly(PartData removedPart, ItemType type)
+{
+    installedParts.Remove(removedPart);
+    if (type == ItemType.PowerSupply) currentPowerSupplyCapacity = 0f;
+    else currentTotalTDP -= removedPart.tdp;
+    CheckPowerBalance();
+}
 
-    // Логика проверки из Листинга А.2 (Уровень 2: Энергетический аудит)
-    public bool CheckPowerBalance()
-    {
-        if (installedParts.Count == 0) return true;
+public bool CheckPowerBalance()
+{
+    if (installedParts.Count == 0) return true;
+    float requiredPeakPower = currentTotalTDP * 1.2f;
 
-        // Требуется запас мощности 20% по диплому
-        float requiredPeakPower = currentTotalTDP * 1.2f;
-
-        if (currentPowerSupplyCapacity >= requiredPeakPower)
-        {
-            Debug.Log($"Энергобаланс в норме. Потребление: {currentTotalTDP}W, Блок питания: {currentPowerSupplyCapacity}W");
-            return true;
-        }
-        else
-        {
-            float deficit = requiredPeakPower - currentPowerSupplyCapacity;
-            Debug.LogWarning($"ОШИБКА: Недостаточно мощности блока питания! Дефицит {deficit}W.");
-            return false;
-        }
-    }
+    if (currentPowerSupplyCapacity >= requiredPeakPower) return true;
+    else return false;
+}
 }

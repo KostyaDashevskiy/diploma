@@ -1,11 +1,21 @@
-using UnityEngine;
+using System.Collections.Generic;
 
-// Класс характеристик из твоего диплома
 [System.Serializable]
 public class PartData
 {
-    public string partID;       // Например: "cpu_i5"
-    public string partName;     // Например: "Intel Core i5"
-    public string socketType;   // "LGA1700", "AM5", "DDR4", "ATX"
-    public float tdp;           // Потребление энергии (Ватт). Для БП это будет запас мощности.
+    public string partID;
+    public string partName;
+    public string socketType;
+    public float tdp;
+
+    public float length; 
+    public float width;
+    public float height;
+}
+
+// Этот класс нужен специально для чтения JSON "из коробки"
+[System.Serializable]
+public class PartDatabase
+{
+    public List<PartData> parts;
 }

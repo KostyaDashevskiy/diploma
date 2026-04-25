@@ -12,11 +12,11 @@ public class PCCase : PickupItem
     public override string GetPromptMessage(PlayerInteract player)
     {
         if (player.heldItem == null)
-            return "E - Взять Корпус";
+            return "E - Взять\nКорпус";
         else if (player.heldItem.itemType == ItemType.Case)
             return "Нельзя вставить корпус в корпус!";
         else
-            return "E - Установить " + player.heldItem.data.partName;
+            return "E - Установить\n" + player.heldItem.data.partName;
     }
 
     // Метод для очистки статуса, когда мы достаем деталь
@@ -85,6 +85,7 @@ public class PCCase : PickupItem
             itemInHand.transform.SetParent(targetPoint);
             itemInHand.transform.localPosition = Vector3.zero; 
             itemInHand.transform.localRotation = Quaternion.identity;
+            
 
             itemInHand.SetPhysics(false);
             itemInHand.currentCase = this; // Запоминаем, что деталь в корпусе

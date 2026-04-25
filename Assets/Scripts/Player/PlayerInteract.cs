@@ -1,119 +1,117 @@
 using UnityEngine;
 using UnityEngine.InputSystem; // Добавили для работы с кнопкой Q
-
 public class PlayerInteract : MonoBehaviour
 {
-    private Camera cam;
-    [SerializeField] private float distance = 3f;[SerializeField] private LayerMask mask;
+private Camera cam;
+[SerializeField] private float distance = 3f;[SerializeField] private LayerMask mask;
+[Header("Настройки инвентаря/рук")]
+public Transform holdPosition; 
+public PickupItem heldItem;    
 
-    [Header("Настройки инвентаря/рук")]
-    public Transform holdPosition; 
-    public PickupItem heldItem;    
-    
-    private PlayerUi playerUI;
-    private InputManager inputManager;
+private PlayerUi playerUI;
+private InputManager inputManager;
 
-    private string tempMessage = "";
-    private float tempMessageTimer = 0f;
+private string tempMessage = "";
+private float tempMessageTimer = 0f;
 
-    void Start()
+void Start()
+{
+    cam = GetComponent<PlayerLook>().cam;
+    playerUI = GetComponent<PlayerUi>();
+    inputManager = GetComponent<InputManager>();
+}
+
+void Update()
+{
+    if (tempMessageTimer > 0)
     {
-        cam = GetComponent<PlayerLook>().cam;
-        playerUI = GetComponent<PlayerUi>();
-        inputManager = GetComponent<InputManager>();
+        tempMessageTimer -= Time.deltaTime;
+        playerUI.UpdateText(tempMessage);
+    }
+    else
+    {
+        playerUI.UpdateText(string.Empty);
     }
 
-    void Update()
+    Ray ray = new Ray(cam.transform.position, cam.transform.forward);
+    RaycastHit hitInfo;
+    bool lookingAtInteractable = false;
+
+    if (Physics.Raycast(ray, out hitInfo, distance, mask))
     {
-        if (tempMessageTimer > 0)
+        Interactable interactable = hitInfo.collider.GetComponent<Interactable>();
+        if (interactable != null)
         {
-            tempMessageTimer -= Time.deltaTime;
-            playerUI.UpdateText(tempMessage);
-        }
-        else
-        {
-            playerUI.UpdateText(string.Empty);
-        }
-
-        Ray ray = new Ray(cam.transform.position, cam.transform.forward);
-        RaycastHit hitInfo;
-        bool lookingAtInteractable = false;
-
-        if (Physics.Raycast(ray, out hitInfo, distance, mask))
-        {
-            Interactable interactable = hitInfo.collider.GetComponent<Interactable>();
-            if (interactable != null)
+            lookingAtInteractable = true;
+            
+            if (tempMessageTimer <= 0) 
             {
-                lookingAtInteractable = true;
-                
-                if (tempMessageTimer <= 0) 
-                {
-                    playerUI.UpdateText(interactable.GetPromptMessage(this));
-                }
-
-                // Логика установки / Взятия предмета (на E)
-                if (inputManager.onFoot.Interact.triggered)
-                {
-                    interactable.BaseInteract(this);
-                }
-
-                // НОВАЯ ЛОГИКА ИЗВЛЕЧЕНИЯ (на Q)
-                if (Keyboard.current.qKey.wasPressedThisFrame)
-                {
-                    PickupItem pItem = interactable as PickupItem;
-                    if (pItem != null)
-                    {
-                        pItem.Extract(this);
-                    }
-                }
-            }
-        }
-
-        if (!lookingAtInteractable && heldItem != null)
-        {
-            if (tempMessageTimer <= 0)
-            {
-                playerUI.UpdateText("E - Положить " + heldItem.data.partName);
+                playerUI.UpdateText(interactable.GetPromptMessage(this));
             }
 
+            // Логика установки / Взятия предмета (на E)
             if (inputManager.onFoot.Interact.triggered)
             {
-                PlaceHeldItem();
+                interactable.BaseInteract(this);
+            }
+
+            // НОВАЯ ЛОГИКА ИЗВЛЕЧЕНИЯ (на Q)
+            if (Keyboard.current.qKey.wasPressedThisFrame)
+            {
+                PickupItem pItem = interactable as PickupItem;
+                if (pItem != null)
+                {
+                    pItem.Extract(this);
+                }
             }
         }
     }
 
-    public void PickUp(PickupItem item)
+    if (!lookingAtInteractable && heldItem != null)
     {
-        heldItem = item;
-        heldItem.transform.SetParent(holdPosition);
-        heldItem.transform.localPosition = Vector3.zero;
-        heldItem.transform.localRotation = Quaternion.identity;
-        heldItem.SetPhysics(false); 
-    }
-
-    private void PlaceHeldItem()
-    {
-        heldItem.transform.SetParent(null);
-        
-        Ray ray = new Ray(cam.transform.position, cam.transform.forward);
-        if (Physics.Raycast(ray, out RaycastHit hit, distance))
+        if (tempMessageTimer <= 0)
         {
-            heldItem.transform.position = hit.point + hit.normal * 0.1f; 
-        }
-        else
-        {
-            heldItem.transform.position = cam.transform.position + cam.transform.forward * (distance - 0.5f);
+            playerUI.UpdateText("E - Положить\n" + heldItem.data.partName);
         }
 
-        heldItem.transform.rotation = Quaternion.Euler(0, cam.transform.eulerAngles.y, 0);
-        heldItem.SetPhysics(true); 
-        heldItem = null; 
+        if (inputManager.onFoot.Interact.triggered)
+        {
+            PlaceHeldItem();
+        }
+    }
+}
+
+public void PickUp(PickupItem item)
+{
+    heldItem = item;
+    heldItem.transform.SetParent(holdPosition);
+    heldItem.transform.localPosition = Vector3.zero;
+    heldItem.transform.localRotation = Quaternion.identity;
+    heldItem.SetPhysics(false); 
+}
+
+private void PlaceHeldItem()
+{
+    heldItem.transform.SetParent(null);
+    
+    Ray ray = new Ray(cam.transform.position, cam.transform.forward);
+    if (Physics.Raycast(ray, out RaycastHit hit, distance))
+    {
+        heldItem.transform.position = hit.point + hit.normal * 0.1f; 
+    }
+    else
+    {
+        heldItem.transform.position = cam.transform.position + cam.transform.forward * (distance - 0.5f);
     }
 
-    public void ShowTempMessage(string message, float duration = 2f)
-    {
-        tempMessage = "<color=red>" + message + "</color>";
-        tempMessageTimer = duration;
-    }
+    heldItem.transform.rotation = Quaternion.Euler(0, cam.transform.eulerAngles.y, 0);
+    heldItem.SetPhysics(true); 
+    heldItem = null; 
+}
+
+public void ShowTempMessage(string message, float duration = 2f)
+{
+    tempMessage = "<color=red>" + message + "</color>";
+    tempMessageTimer = duration;
+}
 }

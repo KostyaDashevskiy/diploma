@@ -1,17 +1,19 @@
 using UnityEngine;
 
-// ДОБАВЛЕН COOLER В СПИСОК
 public enum ItemType { Generic, Case, Motherboard, GPU, CPU, RAM, PowerSupply, Cooler }
 
 public class PickupItem : Interactable
 {
     public ItemType itemType;
 
-    [Header("Технические характеристики")]
-    public PartData data; 
+    [Header("Связь с JSON базой")][Tooltip("Напиши сюда partID из JSON (например: cpu_i5)")]
+    public string jsonPartID; 
+
+    // Скрываем это из инспектора, чтобы не заполнять руками!
+    [HideInInspector] public PartData data; 
     
     public Slot currentSlot; 
-    public PCCase currentCase; // Ссылка на корпус, если стоит в нем
+    public PCCase currentCase; 
     
     private Rigidbody rb;
     private Collider coll;
@@ -22,17 +24,33 @@ public class PickupItem : Interactable
         coll = GetComponent<Collider>();
     }
 
+    // НОВЫЙ МЕТОД START
+    private void Start()
+    {
+        // При старте игры деталь обращается к Менеджеру и просит выдать ей её характеристики
+        data = AssemblyManager.Instance.GetPartInfo(jsonPartID);
+
+        // Защита от опечаток
+        if (data == null)
+        {
+            Debug.LogError($"ВНИМАНИЕ! Деталь с ID '{jsonPartID}' не найдена в JSON базе! Проверьте опечатки.");
+            // Создаем заглушку, чтобы игра не сломалась с ошибкой NullReference
+            data = new PartData { partName = "НЕИЗВЕСТНАЯ ДЕТАЛЬ", socketType = "Error", tdp = 0 };
+        }
+    }
+    
+
     public override string GetPromptMessage(PlayerInteract player)
     {
         // Если деталь установлена куда-либо
         if (currentSlot != null || currentCase != null)
         {
-            return $"<color=yellow>Q - Достать {data.partName}</color>";
+            return $"<color=yellow>Q - Достать\n{data.partName}</color>";
         }
 
         // Если валяется на столе и руки пустые
         if (player.heldItem == null)
-            return "E - Взять " + data.partName; 
+            return "E - Взять\n" + data.partName; 
             
         return ""; 
     }

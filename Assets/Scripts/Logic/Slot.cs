@@ -43,9 +43,17 @@ public class Slot : Interactable
                 installedItem = itemInHand;
                 
                 itemInHand.currentSlot = this; 
+
+                // 1. Привязываем к родителю слота (обычно это Root материнки со Scale 1,1,1)
                 itemInHand.transform.SetParent(this.transform.parent); 
-                itemInHand.transform.position = this.transform.position + this.transform.up * 0.05f; 
-                itemInHand.transform.localRotation = Quaternion.identity;
+                
+                // 2. УБИРАЕМ "+ 0.02f", чтобы деталь не висела в воздухе. 
+                // Теперь она встанет ровно в центр твоего объекта-слота.
+                itemInHand.transform.position = this.transform.position; 
+
+                // 3. ЗАМЕНЯЕМ localRotation на глобальный rotation.
+                // Теперь деталь скопирует наклон слота, который ты выставил в редакторе.
+                itemInHand.transform.rotation = this.transform.rotation;
 
                 itemInHand.SetPhysics(false);
                 

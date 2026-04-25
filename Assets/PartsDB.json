@@ -1,0 +1,96 @@
+{
+  "parts":[
+    {
+      "partID": "cpu_i5_12400",
+      "partName": "Intel Core i5-12400",
+      "socketType": "LGA1700",
+      "tdp": 65,
+      "length": 37, "width": 37, "height": 5
+    },
+    {
+      "partID": "cpu_i9_13900k",
+      "partName": "Intel Core i9-13900K",
+      "socketType": "LGA1700",
+      "tdp": 253,
+      "length": 37, "width": 37, "height": 5
+    },
+    {
+      "partID": "cpu_r5_5600",
+      "partName": "AMD Ryzen 5 5600",
+      "socketType": "AM4",
+      "tdp": 65,
+      "length": 40, "width": 40, "height": 5
+    },
+    {
+      "partID": "mb_b660m",
+      "partName": "MSI PRO B660M-A",
+      "socketType": "LGA1700",
+      "tdp": 15,
+      "length": 244, "width": 244, "height": 40
+    },
+    {
+      "partID": "mb_b550",
+      "partName": "Gigabyte B550 AORUS",
+      "socketType": "AM4",
+      "tdp": 15,
+      "length": 305, "width": 244, "height": 40
+    },
+    {
+      "partID": "gpu_3060",
+      "partName": "NVIDIA RTX 3060",
+      "socketType": "PCIe_x16",
+      "tdp": 170,
+      "length": 242, "width": 112, "height": 40
+    },
+    {
+      "partID": "gpu_4090",
+      "partName": "NVIDIA RTX 4090 (Огромная)",
+      "socketType": "PCIe_x16",
+      "tdp": 450,
+      "length": 340, "width": 140, "height": 61
+    },
+    {
+      "partID": "ram_ddr4",
+      "partName": "Corsair Vengeance 16GB DDR4",
+      "socketType": "DDR4",
+      "tdp": 5,
+      "length": 135, "width": 7, "height": 33
+    },
+    {
+      "partID": "psu_500",
+      "partName": "Блок питания 500W",
+      "socketType": "ATX",
+      "tdp": 500,
+      "length": 150, "width": 140, "height": 86
+    },
+    {
+      "partID": "psu_1000",
+      "partName": "Блок питания 1000W",
+      "socketType": "ATX",
+      "tdp": 1000,
+      "length": 150, "width": 170, "height": 86
+    },
+    {
+      "partID": "case_standard",
+      "partName": "Корпус Deepcool (Вместительный)",
+      "socketType": "ATX",
+      "tdp": 0,
+      "length": 330, "width": 210, "height": 479
+    },
+    {
+      "partID": "case_mini",
+      "partName": "Корпус Mini-ITX (Маленький)",
+      "socketType": "ATX",
+      "tdp": 0,
+      "length": 210, "width": 150, "height": 250
+    },
+    {
+      "partID": "cooler_air",
+      "partName": "Кулер Deepcool GAMMAXX",
+      "socketType": "LGA1700",
+      "tdp": 0,
+      "length": 135, "width": 80, "height": 155
+    }
+    
+  ]
+}
