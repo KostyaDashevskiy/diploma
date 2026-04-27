@@ -3,14 +3,13 @@ using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour
 {
-    private PlayerInput playerInput;
+    // Сделали публичным, чтобы мы могли включать/отключать Action Map из других скриптов
+    public PlayerInput playerInput; 
     public PlayerInput.OnFootActions onFoot;
 
     private PlayerMotor motor;
-
     private PlayerLook look;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
     {
         playerInput = new PlayerInput();
@@ -20,24 +19,14 @@ public class InputManager : MonoBehaviour
         look = GetComponent<PlayerLook>();
 
         onFoot.Jump.performed += ctx => motor.Jump();
-
-        //спринт и приседание
         onFoot.Crouch.performed += ctx => motor.Crouch();
         onFoot.Sprint.performed += ctx => motor.Sprint();
     }
 
-    // Update is called once per frame
-    // void FixedUpdate()
-    // {
-    //     motor.ProcessMove(onFoot.Movement.ReadValue<Vector2>());
-    // }
-
-    // private void LateUpdate()
-    // {
-    //     look.ProcessLook(onFoot.Look.ReadValue<Vector2>());
-    // } 
     void Update()
     {
+        // Теперь мы не проверяем isOpen здесь. 
+        // Мы просто отключаем саму систему onFoot, когда меню открыто.
         motor.ProcessMove(onFoot.Movement.ReadValue<Vector2>());
         look.ProcessLook(onFoot.Look.ReadValue<Vector2>());
     }

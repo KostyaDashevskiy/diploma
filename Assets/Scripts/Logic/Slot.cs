@@ -32,9 +32,36 @@ public class Slot : Interactable
             // ПРОВЕРКА БЛОКИРОВКИ (если мы ставим проц, а кулер уже стоит)
             if (blockingSlot != null && blockingSlot.isOccupied)
             {
-                player.ShowTempMessage("Установка невозможна! Мешает другая деталь.");
+                player.ShowTempMessage("<color=red>Установка невозможна! Мешает другая деталь.</color>");
                 return;
             }
+
+            // --- НОВАЯ ЛОГИКА: ПРОВЕРКА ГАБАРИТОВ В КОРПУСЕ ---
+            // Пытаемся найти корпус выше по иерархии (если мы уже вставлены в него)
+            PCCase parentCase = this.GetComponentInParent<PCCase>();
+            if (parentCase != null)
+            {
+                // Проверяем длину видеокарты
+                if (itemInHand.itemType == ItemType.GPU)
+                {
+                    if (itemInHand.data.length > parentCase.data.length)
+                    {
+                        player.ShowTempMessage($"<color=red>Видеокарта не влезает в корпус! Макс. длина: {parentCase.data.length}мм, а у детали: {itemInHand.data.length}мм</color>", 4f);
+                        return; // Прерываем установку
+                    }
+                }
+                // Проверяем высоту кулера (ширина корпуса = высота кулера)
+                else if (itemInHand.itemType == ItemType.Cooler)
+                {
+                    if (itemInHand.data.height > parentCase.data.width)
+                    {
+                        player.ShowTempMessage($"<color=red>Кулер слишком высокий! Корпус вмещает {parentCase.data.width}мм, а кулер {itemInHand.data.height}мм</color>", 4f);
+                        return; // Прерываем установку
+                    }
+                }
+            }
+            // ---------------------------------------------------
+
 
             if (itemInHand.data.socketType == acceptableSocket)
             {
@@ -65,7 +92,7 @@ public class Slot : Interactable
             }
             else
             {
-                player.ShowTempMessage($"Несовместимо! Слот требует {acceptableSocket}, а у детали {itemInHand.data.socketType}", 3f);
+                player.ShowTempMessage($"<color=red>Несовместимо! Слот требует {acceptableSocket}, а у детали {itemInHand.data.socketType}</color>", 3f);
             }
         }
     }

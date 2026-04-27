@@ -34,7 +34,7 @@ public class PCCase : PickupItem
 
             if (itemInHand.itemType == ItemType.Case)
             {
-                player.ShowTempMessage("Нельзя вставить корпус в корпус!");
+                player.ShowTempMessage("<color=red>Нельзя вставить корпус в корпус!</color>");
                 return;
             }
 
@@ -44,7 +44,7 @@ public class PCCase : PickupItem
                 itemInHand.itemType == ItemType.RAM ||
                 itemInHand.itemType == ItemType.Cooler)
             {
-                player.ShowTempMessage("Эту деталь нужно вставлять в слот на материнской плате!");
+                player.ShowTempMessage("<color=red>Эту деталь нужно вставлять в слот на материнской плате!</color>");
                 return;
             }
 
@@ -53,24 +53,53 @@ public class PCCase : PickupItem
             {
                 if (hasPSU)
                 {
-                    player.ShowTempMessage("Блок питания уже установлен!");
+                    player.ShowTempMessage("<color=red>Блок питания уже установлен!</color>");
                     return;
                 }
                 hasPSU = true;
             }
             // ЛОГИКА МАТЕРИНСКОЙ ПЛАТЫ
+            // ЛОГИКА МАТЕРИНСКОЙ ПЛАТЫ
             else if (itemInHand.itemType == ItemType.Motherboard)
             {
                 if (hasMotherboard)
                 {
-                    player.ShowTempMessage("Материнская плата уже установлена!");
+                    player.ShowTempMessage("<color=red>Материнская плата уже установлена!</color>");
                     return;
                 }
-                hasMotherboard = true;
+
+                // --- СКАНИРОВАНИЕ ГАБАРИТОВ СБОРКИ ---
+                // Ищем все скрипты PickupItem внутри материнки (это детали в слотах)
+                PickupItem[] attachedParts = itemInHand.GetComponentsInChildren<PickupItem>();
+
+                foreach (PickupItem part in attachedParts)
+                {
+                    // Проверяем длинные видеокарты
+                    if (part.itemType == ItemType.GPU)
+                    {
+                        if (part.data.length > this.data.length) // this.data - это данные текущего корпуса
+                        {
+                            player.ShowTempMessage($"<color=red>Установка отменена! Установленная видеокарта ({part.data.length}мм) не влезет в этот корпус ({this.data.length}мм).</color>", 4f);
+                            return; // Прерываем установку материнки!
+                        }
+                    }
+                    // Проверяем высокие кулеры (высота кулера сравнивается с шириной корпуса)
+                    else if (part.itemType == ItemType.Cooler)
+                    {
+                        if (part.data.height > this.data.width)
+                        {
+                            player.ShowTempMessage($"<color=red>Установка отменена! Башня кулера ({part.data.height}мм) не закроет боковую крышку корпуса ({this.data.width}мм).</color>", 4f);
+                            return; // Прерываем установку материнки!
+                        }
+                    }
+                }
+                // -------------------------------------
+
+                hasMotherboard = true; // Все проверки пройдены, разрешаем установку
             }
             else
             {
-                player.ShowTempMessage("Нельзя вставить это в корпус!");
+                player.ShowTempMessage("<color=red>Нельзя вставить это в корпус!</color>");
                 return;
             }
 

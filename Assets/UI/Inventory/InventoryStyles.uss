@@ -1,9 +1,139 @@
 .InventoryPanel {
     opacity: 0;
-    transition-property: all;
+    transition-property: opacity;
     transition-duration: 100ms;
+    display: none;
 }
 
 .InventoryPanel.InventoryPanel-active {
     opacity: 1;
+    display: flex;
+}
+
+/* --- СТИЛИ ДЛЯ БОКОВЫХ КРУГЛЫХ КНОПОК --- */
+.category-btn {
+    width: 65px;
+    height: 65px;
+    border-radius: 35px; /* Делает кнопку круглой */
+    background-color: rgb(44, 62, 80);
+    color: white;
+    font-size: 14px;
+    -unity-font-style: bold;
+    border-width: 0;
+    margin-bottom: 15px;
+    transition-duration: 0.1s;
+}
+
+.category-btn:hover {
+    background-color: rgb(52, 152, 219);
+    scale: 1.1; /* Чуть увеличиваем при наведении */
+}
+
+/* Активная кнопка (выбранная категория) */
+.category-btn.active {
+    background-color: rgb(46, 204, 113);
+}
+
+/* --- СТИЛИ КАРТОЧКИ --- */
+.card {
+    width: 320px;
+    height: 420px;
+    border-width: 1px;
+    border-color: white;
+    border-radius: 25px;
+    margin-right: 18px;
+    margin-bottom: 18px;
+    justify-content: space-between;
+    background-color: rgba(20, 30, 40, 0.9);
+}
+
+.card-image {
+    width: 100%;
+    height: 45%;
+    background-color: rgb(200, 200, 200);
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+}
+
+.card-info {
+    width: 100%;
+    height: 55%;
+    padding: 12px;
+    justify-content: space-between;
+}
+
+.card-title {
+    font-size: 16px;
+    color: white;
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.card-desc {
+    font-size: 14px;
+    color: rgb(200, 200, 200);
+    white-space: normal;
+}
+
+/* --- КНОПКА ЗАКАЗАТЬ --- */
+.order-button {
+    background-color: rgb(46, 204, 113);
+    color: white;
+    font-size: 16px;
+    -unity-font-style: bold;
+    border-radius: 10px;
+    padding: 10px;
+    border-width: 0;
+    transition-duration: 0.1s;
+}
+
+.order-button:hover { background-color: rgb(39, 174, 96); }
+.order-button:active { background-color: rgb(30, 132, 73); }
+
+/* --- КНОПКА ВОПРОСА --- */
+.theory-toggle-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background-color: rgb(44, 62, 80);
+    color: white;
+    font-size: 24px;
+    -unity-font-style: bold;
+    border-width: 0;
+    transition-duration: 0.1s;
+}
+
+.theory-toggle-btn:hover { background-color: rgb(52, 152, 219); }
+.theory-toggle-btn.active { background-color: rgb(241, 196, 15); color: black; }
+
+/* --- ПАНЕЛЬ ТЕОРИИ --- */
+.theory-panel {
+    width: 400px;
+    background-color: rgba(14, 20, 26, 0.95);
+    border-radius: 20px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    margin-left: 20px;
+    padding: 30px;
+    display: none; /* Скрыта по умолчанию */
+}
+
+.theory-panel.active {
+    display: flex; /* Показывается, когда включена */
+}
+
+.theory-title {
+    font-size: 24px;
+    color: white;
+    -unity-font-style: bold;
+    margin-bottom: 15px;
+    border-bottom-width: 1px;
+    border-color: rgba(255, 255, 255, 0.3);
+    padding-bottom: 10px;
+}
+
+.theory-text {
+    font-size: 16px;
+    color: rgb(200, 200, 200);
+    white-space: normal;
 }

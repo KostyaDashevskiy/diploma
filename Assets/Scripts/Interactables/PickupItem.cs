@@ -40,21 +40,45 @@ public class PickupItem : Interactable
     }
     
 
+// Короткий текст для ПРИЦЕЛА (только Тип и Название)
     public override string GetPromptMessage(PlayerInteract player)
     {
-        // Если деталь установлена куда-либо
-        if (currentSlot != null || currentCase != null)
-        {
-            return $"<color=yellow>Q - Достать\n{data.partName}</color>";
-        }
+        string typeStr = itemType.ToString(); // Превращаем тип (GPU, CPU) в текст
 
-        // Если валяется на столе и руки пустые
+        if (currentSlot != null || currentCase != null)
+            return $"<color=yellow>Q - Достать [{typeStr}] {data.partName}</color>";
+        
         if (player.heldItem == null)
-            return "E - Взять\n" + data.partName; 
+            return $"E - Взять [{typeStr}] {data.partName}"; 
             
         return ""; 
     }
+    // public override string GetPromptMessage(PlayerInteract player)
+    // {
+    //     // Если деталь установлена куда-либо
+    //     if (currentSlot != null || currentCase != null)
+    //     {
+    //         return $"<color=yellow>Q - Достать\n{data.partName}</color>";
+    //     }
 
+    //     // Если валяется на столе и руки пустые
+    //     if (player.heldItem == null)
+    //         return "E - Взять\n" + data.partName; 
+            
+    //     return ""; 
+    // }
+    // НОВЫЙ МЕТОД: Подробный текст для ЛЕВОГО НИЖНЕГО УГЛА
+    public string GetStatsMessage()
+    {
+        if (data == null) return "";
+
+        return $"<b>Тип:</b> {itemType}\n" +
+               $"<b>Модель:</b> {data.partName}\n" +
+               $"<b>Сокет:</b> {data.socketType}\n" +
+               $"<b>TDP:</b> {data.tdp} W\n" +
+               $"<b>Габариты:</b> {data.length} x {data.width} x {data.height} мм";
+    }
+    
     protected override void Interact(PlayerInteract player)
     {
         // Берем только если она НЕ установлена (установленные мы достаем на Q)
