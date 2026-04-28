@@ -26,6 +26,21 @@ public class PlayerInteract : MonoBehaviour
 
     void Update()
     {
+        if (LaptopManager.Instance != null && LaptopManager.Instance.isOpen) 
+        {
+            playerUI.UpdateCenterPrompt(string.Empty);
+            playerUI.UpdateBottomStats(string.Empty);
+            return;
+        }
+        
+        // --- 1. ЕСЛИ ИГРА НА ПАУЗЕ ---
+        if (PauseMenu.Instance != null && PauseMenu.Instance.isPaused)
+        {
+            // Стираем тексты и отключаем луч
+            playerUI.UpdateCenterPrompt(string.Empty);
+            playerUI.UpdateBottomStats(string.Empty);
+            return;
+        }
         // Если инвентарь открыт, отключаем взаимодействие с миром
         // --- ФИКС ТЕКСТА ---
         if (InventoryManager.Instance != null && InventoryManager.Instance.isOpen) 

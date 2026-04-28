@@ -36,13 +36,13 @@
 
 /* --- СТИЛИ КАРТОЧКИ --- */
 .card {
-    width: 320px;
+    width: 310px; /* Чуть сузили, чтобы 3 в ряд влезали 100% */
     height: 420px;
     border-width: 1px;
     border-color: white;
     border-radius: 25px;
-    margin-right: 18px;
-    margin-bottom: 18px;
+    margin-right: 15px; /* Чуть уменьшили отступ */
+    margin-bottom: 15px;
     justify-content: space-between;
     background-color: rgba(20, 30, 40, 0.9);
 }
@@ -109,14 +109,16 @@
 /* --- ПАНЕЛЬ ТЕОРИИ --- */
 .theory-panel {
     width: 400px;
+    height: 950px; /* УВЕЛИЧИЛИ ВЫСОТУ */
     background-color: rgba(14, 20, 26, 0.95);
     border-radius: 20px;
-    margin-top: 30px;
-    margin-bottom: 30px;
-    margin-left: 20px;
+    margin-left: 15px; 
     padding: 30px;
-    display: none; /* Скрыта по умолчанию */
+    display: none;
 }
+
+
+
 
 .theory-panel.active {
     display: flex; /* Показывается, когда включена */

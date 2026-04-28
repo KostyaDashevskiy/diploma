@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <!-- Полупрозрачный черный фон на весь экран -->
+    <ui:VisualElement name="PauseContainer" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0.85); justify-content: center; align-items: center; width: 100%; height: 100%; position: absolute; display: none;">
+        
+        <ui:Label text="ПАУЗА" style="font-size: 48px; color: white; -unity-font-style: bold; margin-bottom: 40px;" />
+        
+        <!-- Кнопки -->
+        <ui:Button name="Btn_MainMenu" text="Сменить режим" style="width: 350px; height: 65px; font-size: 24px; margin-bottom: 20px; background-color: rgb(41, 128, 185); color: white; border-radius: 10px; border-width: 0; transition-duration: 0.1s;" />
+        <ui:Button name="Btn_Quit" text="Выход" style="width: 350px; height: 65px; font-size: 24px; background-color: rgb(192, 57, 43); color: white; border-radius: 10px; border-width: 0; transition-duration: 0.1s;" />
+        
+    </ui:VisualElement>
+</ui:UXML>

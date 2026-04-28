@@ -1,0 +1,38 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    
+    <!-- ГЛАВНЫЙ КОНТЕЙНЕР (Экран ноутбука) -->
+    <ui:VisualElement name="LaptopContainer" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; width: 100%; height: 100%; position: absolute; display: none;">
+        
+        <!-- Рамка экрана -->
+        <ui:VisualElement style="width: 1200px; height: 800px; background-color: rgb(30, 30, 40); border-radius: 15px; overflow: hidden; border-width: 5px; border-color: rgb(50, 50, 60);">
+            
+            <!-- РАБОЧИЙ СТОЛ (Отображается по умолчанию) -->
+            <ui:VisualElement name="DesktopView" style="flex-grow: 1; background-color: rgb(41, 128, 185); padding: 40px; flex-direction: row; align-content: flex-start; flex-wrap: wrap;">
+                
+                <!-- Ярлык 1: Магазин -->
+                <ui:Button name="Btn_ShopApp" text="Каталог&#10;" style="width: 120px; height: 120px; background-color: rgba(0,0,0,0.3); color: white; border-radius: 15px; border-width: 0; font-size: 16px; -unity-font-style: bold; margin-right: 20px; transition-duration: 0.1s;" />
+                
+                <!-- Ярлык 2: Состояние ПК -->
+                <ui:Button name="Btn_StatusApp" text="Состояние&#10;Сборок" style="width: 120px; height: 120px; background-color: rgba(0,0,0,0.3); color: white; border-radius: 15px; border-width: 0; font-size: 16px; -unity-font-style: bold; transition-duration: 0.1s;" />
+                
+            </ui:VisualElement>
+
+            <!-- ОКНО ПРИЛОЖЕНИЯ: СОСТОЯНИЕ СБОРКИ (Скрыто по умолчанию) -->
+            <ui:VisualElement name="StatusView" style="flex-grow: 1; background-color: rgb(236, 240, 241); display: none;">
+                
+                <!-- Шапка окна -->
+                <ui:VisualElement style="height: 50px; background-color: rgb(189, 195, 199); flex-direction: row; align-items: center; padding-left: 20px;">
+                    <ui:Button name="Btn_CloseStatus" text="X" style="width: 40px; height: 40px; background-color: rgb(231, 76, 60); color: white; border-radius: 5px; border-width: 0; -unity-font-style: bold;" />
+                    <ui:Label text="Диагностика системы" style="font-size: 20px; color: black; -unity-font-style: bold; margin-left: 20px;" />
+                </ui:VisualElement>
+
+                <!-- Содержимое (Статистика) -->
+                <ui:ScrollView style="flex-grow: 1; padding: 30px;">
+                    <ui:Label name="Txt_SystemStats" text="Загрузка данных..." style="font-size: 24px; color: rgb(44, 62, 80); white-space: normal;" />
+                </ui:ScrollView>
+
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

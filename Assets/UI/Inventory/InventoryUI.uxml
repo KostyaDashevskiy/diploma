@@ -1,19 +1,23 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/Inventory/InventoryStyles.uss" />
     
-    <!-- ГЛАВНЫЙ КОНТЕЙНЕР (держит обе панели по центру экрана) -->
-    <ui:VisualElement style="flex-direction: row; justify-content: center; width: 100%; height: 100%;">
+    <!-- ГЛАВНЫЙ КОНТЕЙНЕР -->
+    <ui:VisualElement style="flex-direction: row; justify-content: center; align-items: center; width: 100%; height: 100%;">
         
-        <!-- ЛЕВАЯ ЧАСТЬ: МАГАЗИН -->
-        <ui:VisualElement name="InventoryPanel" class="InventoryPanel" style="flex-grow: 0; background-color: rgba(14, 20, 26, 0.95); width: 1200px; height: 900px; flex-direction: column; margin: 30px; padding: 40px; border-radius: 20px;">
+        <!-- ЛЕВАЯ ЧАСТЬ: МАГАЗИН (УВЕЛИЧЕНА ВЫСОТА И ШИРИНА) -->
+        <ui:VisualElement name="InventoryPanel" class="InventoryPanel" style="flex-grow: 0; background-color: rgba(14, 20, 26, 0.95); width: 1250px; height: 950px; flex-direction: column; padding: 40px; border-radius: 20px;">
             
             <ui:VisualElement name="Header" style="height: 60px; justify-content: space-between; border-bottom-width: 1px; border-color: white; flex-direction: row; align-items: center; margin-bottom: 20px;">
+                <!-- НОВАЯ КНОПКА НАЗАД -->
+                <ui:Button name="Btn_BackToLaptop" text="X" style="width: 40px; height: 40px; background-color: rgb(231, 76, 60); color: white; border-radius: 5px; border-width: 0; -unity-font-style: bold;" />
+                <!--<ui:Button name="Btn_BackToLaptop" text="← Назад" style="width: 120px; height: 40px; background-color: rgb(231, 76, 60); color: white; border-radius: 10px; border-width: 0; font-size: 16px; -unity-font-style: bold;" />-->
+                
                 <ui:Label text="Каталог комплектующих" style="font-size: 36px; color: white; -unity-font-style: bold;" />
-                <!-- КНОПКА ТЕОРИИ С СПРАВА ВВЕРХУ -->
                 <ui:Button name="Btn_TheoryToggle" class="theory-toggle-btn" text="?" />
             </ui:VisualElement>
             
             <ui:VisualElement name="Bottom" style="flex-grow: 1; flex-direction: row; width: 100%;">
+                
                 <ui:VisualElement name="Sidebar" style="width: 85px; align-items: center; padding-top: 10px; border-right-width: 1px; border-color: rgba(255,255,255,0.2); margin-right: 20px;">
                     <ui:Button name="Btn_All" class="category-btn active" text="ВСЕ" />
                     <ui:Button name="Btn_CPU" class="category-btn" text="CPU" />
@@ -25,11 +29,13 @@
                     <ui:Button name="Btn_Case" class="category-btn" text="CASE" />
                 </ui:VisualElement>
 
-                <ui:VisualElement name="Content" style="flex-grow: 1;">
-                    <ui:ScrollView name="CatalogScroll" style="flex-grow: 1;">
-                        <ui:VisualElement name="Grid" style="flex-direction: row; flex-wrap: wrap; padding-bottom: 40px;" />
+                <!-- Контентная часть (растягивается на всё оставшееся место) -->
+                <ui:VisualElement name="Content" style="flex-grow: 1; width: 100%;">
+                    <ui:ScrollView name="CatalogScroll" style="flex-grow: 1; width: 100%;">
+                        <ui:VisualElement name="Grid" style="flex-direction: row; flex-wrap: wrap; padding-bottom: 40px; width: 100%;" />
                     </ui:ScrollView>
                 </ui:VisualElement>
+                
             </ui:VisualElement>
         </ui:VisualElement>
 

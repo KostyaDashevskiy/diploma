@@ -10,8 +10,10 @@ public class InventoryManager : MonoBehaviour
     public InputManager playerInputManager;
     public Transform spawnPoint;
 
+    private VisualElement rootEl;
     private VisualElement inventoryEl;
     private VisualElement gridEl;
+    private List<Button> categoryButtons = new List<Button>();
     
     // Элементы панели теории
     private VisualElement theoryPanel;
@@ -19,13 +21,11 @@ public class InventoryManager : MonoBehaviour
     private Label theoryText;
     private Button theoryToggleBtn;
     
-    private List<Button> categoryButtons = new List<Button>();
-    
     public bool isOpen = false; 
     private bool isTheoryOpen = false;
-    private string currentCategoryPrefix = ""; // Запоминаем текущую категорию
+    private string currentCategoryPrefix = "";
 
-    // БАЗА ЗНАНИЙ (Словарь с теорией для диплома)
+    // База теории
     private Dictionary<string, string> theoryDatabase = new Dictionary<string, string>()
     {
         { "", "Добро пожаловать в конфигуратор!\n\nЗдесь представлены все доступные компоненты ПК. Используйте фильтры слева, чтобы найти конкретную деталь.\n\nОбращайте внимание на Сокеты и TDP (тепловыделение) для обеспечения совместимости." },
@@ -46,30 +46,31 @@ public class InventoryManager : MonoBehaviour
 
     private void OnEnable()
     {
-        VisualElement root = uiDoc.rootVisualElement;
-        inventoryEl = root.Q(className: "InventoryPanel");
-        gridEl = root.Q("Grid");
+        rootEl = uiDoc.rootVisualElement;
+        if (rootEl == null) return;
 
-        // Инициализация элементов теории
-        theoryPanel = root.Q("TheoryPanel");
-        theoryTitle = root.Q<Label>("TheoryTitle");
-        theoryText = root.Q<Label>("TheoryText");
+        inventoryEl = rootEl.Q(className: "InventoryPanel");
+        gridEl = rootEl.Q("Grid");
+
+        Button btnBack = rootEl.Q<Button>("Btn_BackToLaptop");
+        if (btnBack != null) btnBack.clicked += BackToLaptop;
+
+        // Инициализация Теории
+        theoryPanel = rootEl.Q("TheoryPanel");
+        theoryTitle = rootEl.Q<Label>("TheoryTitle");
+        theoryText = rootEl.Q<Label>("TheoryText");
+        theoryToggleBtn = rootEl.Q<Button>("Btn_TheoryToggle");
         
-        theoryToggleBtn = root.Q<Button>("Btn_TheoryToggle");
-        if (theoryToggleBtn != null)
-        {
-            theoryToggleBtn.clicked += ToggleTheoryPanel;
-        }
+        if (theoryToggleBtn != null) theoryToggleBtn.clicked += ToggleTheoryPanel;
 
-        // Привязка кнопок
-        SetupCategoryButton(root, "Btn_All", "");       
-        SetupCategoryButton(root, "Btn_CPU", "cpu");    
-        SetupCategoryButton(root, "Btn_MB", "mb");
-        SetupCategoryButton(root, "Btn_GPU", "gpu");
-        SetupCategoryButton(root, "Btn_RAM", "ram");
-        SetupCategoryButton(root, "Btn_Cooler", "cooler");
-        SetupCategoryButton(root, "Btn_PSU", "psu");
-        SetupCategoryButton(root, "Btn_Case", "case");
+        SetupCategoryButton(rootEl, "Btn_All", "");       
+        SetupCategoryButton(rootEl, "Btn_CPU", "cpu");    
+        SetupCategoryButton(rootEl, "Btn_MB", "mb");
+        SetupCategoryButton(rootEl, "Btn_GPU", "gpu");
+        SetupCategoryButton(rootEl, "Btn_RAM", "ram");
+        SetupCategoryButton(rootEl, "Btn_Cooler", "cooler");
+        SetupCategoryButton(rootEl, "Btn_PSU", "psu");
+        SetupCategoryButton(rootEl, "Btn_Case", "case");
     }
 
     private void Start()
@@ -79,50 +80,54 @@ public class InventoryManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape) && isOpen) Close();
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (isOpen) CloseCompletely();
+            else if (LaptopManager.Instance != null && LaptopManager.Instance.isOpen) LaptopManager.Instance.CloseLaptop();
+            else if (PauseMenu.Instance != null) PauseMenu.Instance.TogglePause();
+        }
     }
 
     // --- ЛОГИКА ТЕОРИИ ---
     private void ToggleTheoryPanel()
     {
         isTheoryOpen = !isTheoryOpen;
-
         if (isTheoryOpen)
         {
             theoryPanel.AddToClassList("active");
             theoryToggleBtn.AddToClassList("active");
-            UpdateTheoryContent(); // Заполняем текстом при открытии
+            UpdateTheoryContent();
         }
         else
         {
-            theoryPanel.RemoveFromClassList("active");
-            theoryToggleBtn.RemoveFromClassList("active");
+            HideTheoryPanel();
         }
+    }
+
+    private void HideTheoryPanel()
+    {
+        isTheoryOpen = false;
+        if (theoryPanel != null) theoryPanel.RemoveFromClassList("active");
+        if (theoryToggleBtn != null) theoryToggleBtn.RemoveFromClassList("active");
     }
 
     private void UpdateTheoryContent()
     {
-        if (!isTheoryOpen) return; // Если скрыта, не обновляем
+        if (!isTheoryOpen) return;
 
-        // Настраиваем Заголовок
         string title = "Информация";
         switch (currentCategoryPrefix)
         {
             case "cpu": title = "О Процессорах"; break;
-            case "mb": title = "О Материнских платах"; break;
+            case "mb": title = "О Мат. платах"; break;
             case "gpu": title = "О Видеокартах"; break;
-            case "ram": title = "Об Оперативной памяти"; break;
+            case "ram": title = "Об ОЗУ"; break;
             case "cooler": title = "Об Охлаждении"; break;
             case "psu": title = "О Блоках питания"; break;
             case "case": title = "О Корпусах"; break;
         }
         theoryTitle.text = title;
-
-        // Берем текст из базы (или стандартный, если не найден)
-        if (theoryDatabase.ContainsKey(currentCategoryPrefix))
-        {
-            theoryText.text = theoryDatabase[currentCategoryPrefix];
-        }
+        if (theoryDatabase.ContainsKey(currentCategoryPrefix)) theoryText.text = theoryDatabase[currentCategoryPrefix];
     }
     // ---------------------
 
@@ -134,10 +139,10 @@ public class InventoryManager : MonoBehaviour
             categoryButtons.Add(btn);
             btn.clicked += () => 
             {
-                currentCategoryPrefix = prefixFilter; // Запоминаем выбранную категорию
+                currentCategoryPrefix = prefixFilter;
                 SetActiveButton(btn);
                 GenerateCatalogUI(prefixFilter);
-                UpdateTheoryContent(); // Обновляем текст теории (если панель открыта)
+                UpdateTheoryContent();
             };
         }
     }
@@ -163,26 +168,24 @@ public class InventoryManager : MonoBehaviour
 
             VisualElement image = new VisualElement();
             image.AddToClassList("card-image");
-            
             Sprite partSprite = Resources.Load<Sprite>($"PartImages/{part.partID}");
             if (partSprite != null) image.style.backgroundImage = new StyleBackground(partSprite);
 
             VisualElement info = new VisualElement();
             info.AddToClassList("card-info");
-
             Label title = new Label(part.partName);
             title.AddToClassList("card-title");
+            info.Add(title);
 
-            Label desc = new Label($"Сокет: {part.socketType}\nTDP: {part.tdp} Вт\nГабариты: {part.length}x{part.width}x{part.height} мм");
+            Label desc = new Label($"Сокет: {part.socketType}\nTDP: {part.tdp} W");
             desc.AddToClassList("card-desc");
+            info.Add(desc);
 
             Button orderBtn = new Button { text = "ЗАКАЗАТЬ" };
             orderBtn.AddToClassList("order-button");
             orderBtn.clicked += () => OrderItem(part.partID);
-
-            info.Add(title);
-            info.Add(desc);
             info.Add(orderBtn);
+
             card.Add(image);
             card.Add(info);
             gridEl.Add(card);
@@ -194,12 +197,11 @@ public class InventoryManager : MonoBehaviour
         GameObject prefabToSpawn = Resources.Load<GameObject>($"Prefabs/{partID}");
         if (prefabToSpawn != null && spawnPoint != null)
         {
-            Vector3 finalSpawnPosition = spawnPoint.position;
-            Collider[] colliders = Physics.OverlapSphere(finalSpawnPosition, 0.2f);
-            if (colliders.Length > 0) finalSpawnPosition += new Vector3(0.2f, 0.2f, 0f);
-
-            Instantiate(prefabToSpawn, finalSpawnPosition, spawnPoint.rotation);
-            Close(); 
+            Vector3 finalPos = spawnPoint.position;
+            if (Physics.OverlapSphere(finalPos, 0.2f).Length > 0) finalPos += new Vector3(0.2f, 0.2f, 0f);
+            Instantiate(prefabToSpawn, finalPos, spawnPoint.rotation);
+            
+            BackToLaptop(); 
         }
     }
 
@@ -213,19 +215,21 @@ public class InventoryManager : MonoBehaviour
         if (playerInputManager != null) playerInputManager.onFoot.Disable();
     }
 
-    public void Close()
+    public void BackToLaptop()
     {
         if (inventoryEl == null) return;
         inventoryEl.RemoveFromClassList("InventoryPanel-active");
-        
-        // Автоматически закрываем панель теории при закрытии магазина
-        isTheoryOpen = false;
-        theoryPanel.RemoveFromClassList("active");
-        if (theoryToggleBtn != null) theoryToggleBtn.RemoveFromClassList("active");
-
         isOpen = false;
-        UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-        UnityEngine.Cursor.visible = false;
-        if (playerInputManager != null) playerInputManager.onFoot.Enable();
+        HideTheoryPanel(); // <-- ЗАКРЫВАЕМ ТЕОРИЮ ПРИ ВОЗВРАТЕ
+        if (LaptopManager.Instance != null) LaptopManager.Instance.ReturnToDesktop();
+    }
+
+    public void CloseCompletely()
+    {
+        if (inventoryEl == null) return;
+        inventoryEl.RemoveFromClassList("InventoryPanel-active");
+        isOpen = false;
+        HideTheoryPanel(); // <-- ЗАКРЫВАЕМ ТЕОРИЮ ПРИ ВЫХОДЕ НА ESC
+        if (LaptopManager.Instance != null) LaptopManager.Instance.CloseLaptop();
     }
 }

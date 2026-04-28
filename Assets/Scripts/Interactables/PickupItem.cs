@@ -2,8 +2,11 @@ using UnityEngine;
 
 public enum ItemType { Generic, Case, Motherboard, GPU, CPU, RAM, PowerSupply, Cooler }
 
+
 public class PickupItem : Interactable
 {
+    [HideInInspector] public float spawnTime;
+
     public ItemType itemType;
 
     [Header("Связь с JSON базой")][Tooltip("Напиши сюда partID из JSON (например: cpu_i5)")]
@@ -22,6 +25,9 @@ public class PickupItem : Interactable
     {
         rb = GetComponent<Rigidbody>();
         coll = GetComponent<Collider>();
+
+        // Запоминаем время, когда этот предмет был создан (заспавнен)
+        spawnTime = Time.time;
     }
 
     // НОВЫЙ МЕТОД START
