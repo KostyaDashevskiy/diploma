@@ -271,16 +271,56 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    private void OrderItem(string partID)
+ private void OrderItem(string partID)
     {
-        GameObject prefabToSpawn = Resources.Load<GameObject>($"Prefabs/{partID}");
+        // 1. ОПРЕДЕЛЯЕМ, КАКУЮ БОЛВАНКУ СПАВНИТЬ
+        string prefabName = "";
+        
+        if (partID.StartsWith("cpu")) prefabName = "Generic_CPU";
+        else if (partID.StartsWith("gpu")) prefabName = "Generic_GPU";
+        else if (partID.StartsWith("mb")) prefabName = "Generic_Motherboard";
+        else if (partID.StartsWith("ram")) prefabName = "Generic_RAM";
+        else if (partID.StartsWith("psu")) prefabName = "Generic_PSU";
+        else if (partID.StartsWith("cooler")) prefabName = "Generic_Cooler";
+        else if (partID.StartsWith("case")) prefabName = "Generic_Case";
+
+        if (string.IsNullOrEmpty(prefabName))
+        {
+            Debug.LogError($"[Магазин] Не удалось определить тип детали для ID: {partID}");
+            return;
+        }
+
+        // 2. ЗАГРУЖАЕМ БОЛВАНКУ
+        GameObject prefabToSpawn = Resources.Load<GameObject>($"Prefabs/{prefabName}");
+        
         if (prefabToSpawn != null && spawnPoint != null)
         {
+            // Умный спавн (смещение, если занято)
             Vector3 finalPos = spawnPoint.position;
             if (Physics.OverlapSphere(finalPos, 0.2f).Length > 0) finalPos += new Vector3(0.2f, 0.2f, 0f);
-            Instantiate(prefabToSpawn, finalPos, spawnPoint.rotation);
+            
+            // 3. СПАВНИМ ОБЪЕКТ НА СТОЛЕ
+            GameObject spawnedObj = Instantiate(prefabToSpawn, finalPos, spawnPoint.rotation);
+            
+            // 4. МАГИЯ: ВНЕДРЯЕМ В БОЛВАНКУ ИДЕНТИФИКАТОР ИЗ JSON
+            PickupItem pItem = spawnedObj.GetComponent<PickupItem>();
+            if (pItem != null)
+            {
+                pItem.jsonPartID = partID;      // Присваиваем ей купленный ID
+                pItem.ReloadDataFromJSON();     // Заставляем её прочитать свои новые характеристики!
+                
+                // Если это материнская плата - заставляем её слоты обновиться
+                if (pItem.itemType == ItemType.Motherboard)
+                {
+                    pItem.SendMessage("Start", SendMessageOptions.DontRequireReceiver);
+                }
+            }
             
             BackToLaptop(); 
+        }
+        else
+        {
+            Debug.LogError($"Не найден префаб-болванка: Resources/Prefabs/{prefabName}");
         }
     }
 

@@ -11826,7 +11826,7 @@ GameObject:
   - component: {fileID: 6682374078644312147}
   - component: {fileID: 6774997089476707684}
   m_Layer: 6
-  m_Name: case_standard(Clone)
+  m_Name: BasePC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

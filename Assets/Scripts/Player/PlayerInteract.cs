@@ -17,11 +17,16 @@ public class PlayerInteract : MonoBehaviour
     // Таймер для верхних уведомлений
     private float notificationTimer = 0f;
 
+    private Vector3 originalHoldLocalPos;
+
     void Start()
     {
         cam = GetComponent<PlayerLook>().cam;
         playerUI = GetComponent<PlayerUi>();
         inputManager = GetComponent<InputManager>();
+
+        // Запоминаем дефолтную позицию точки хвата
+        if (holdPosition != null) originalHoldLocalPos = holdPosition.localPosition;
     }
 
     void Update()
@@ -74,6 +79,13 @@ public class PlayerInteract : MonoBehaviour
         if (Physics.Raycast(ray, out hitInfo, distance, mask))
         {
             Interactable interactable = hitInfo.collider.GetComponent<Interactable>();
+
+            // Если луч попал в деталь, которая сейчас у нас в руках - игнорируем!
+            if (interactable != null && interactable == heldItem)
+            {
+                interactable = null; 
+            }
+
             if (interactable != null)
             {
                 lookingAtInteractable = true;
@@ -103,13 +115,30 @@ public class PlayerInteract : MonoBehaviour
         }
 
         // Логика сброса предмета на стол
-        if (!lookingAtInteractable && heldItem != null)
+        // Логика когда деталь в руках (вращение и сброс)
+        if (heldItem != null)
         {
-            playerUI.UpdateCenterPrompt($"E - Положить [{heldItem.itemType}] {heldItem.data.partName}");
-
-            if (inputManager.onFoot.Interact.triggered)
+            // --- ВРАЩЕНИЕ ДЕТАЛИ ---
+            if (Keyboard.current.rKey.wasPressedThisFrame)
             {
-                PlaceHeldItem();
+                // Крутим по горизонтали на 90 градусов
+                heldItem.transform.Rotate(0, 90f, 0, Space.World);
+            }
+            if (Keyboard.current.fKey.wasPressedThisFrame)
+            {
+                // Крутим по вертикали (кувырок) на 90 градусов
+                heldItem.transform.Rotate(90f, 0, 0, Space.World);
+            }
+
+            // Добавляем подсказки в UI
+            if (!lookingAtInteractable)
+            {
+                playerUI.UpdateCenterPrompt($"E - Положить | R, F - Вращать\n[{heldItem.itemType}] {heldItem.data.partName}");
+
+                if (inputManager.onFoot.Interact.triggered)
+                {
+                    PlaceHeldItem();
+                }
             }
         }
     }
@@ -121,6 +150,18 @@ public class PlayerInteract : MonoBehaviour
         heldItem.transform.localPosition = Vector3.zero;
         heldItem.transform.localRotation = Quaternion.identity;
         heldItem.SetPhysics(false); 
+
+        // --- УМНЫЙ ХВАТ ---
+        // Если это Корпус - отодвигаем точку хвата на полметра вперед
+        if (heldItem.itemType == ItemType.Case)
+        {
+            holdPosition.localPosition = originalHoldLocalPos + new Vector3(0, 0, 0.5f);
+        }
+        else
+        {
+            // Возвращаем в стандартное положение для мелких деталей
+            holdPosition.localPosition = originalHoldLocalPos;
+        }
     }
 
     private void PlaceHeldItem()
@@ -132,9 +173,11 @@ public class PlayerInteract : MonoBehaviour
         else
             heldItem.transform.position = cam.transform.position + cam.transform.forward * (distance - 0.5f);
 
-        heldItem.transform.rotation = Quaternion.Euler(0, cam.transform.eulerAngles.y, 0);
         heldItem.SetPhysics(true); 
         heldItem = null; 
+
+        // Обязательно возвращаем руки на место, когда бросили предмет!
+        holdPosition.localPosition = originalHoldLocalPos;
     }
 
     // Метод для вывода ВЕРХНИХ уведомлений (цвет задаем прямо в тексте при вызове)

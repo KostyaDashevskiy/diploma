@@ -12,7 +12,17 @@ public class LaptopManager : MonoBehaviour
     private VisualElement laptopContainer;
     private VisualElement desktopView;
     private VisualElement statusView;
+    private VisualElement questView;
     private Label txtSystemStats;
+
+    // Элементы квестов
+    private Label txtQuestTitle;
+    private Label txtQuestDesc;
+    private Label txtQuestFeedback;
+    private Label txtGlobalRating;
+    private Button btnAcceptQuest;
+    private Button btnCompleteQuest;
+    private ScrollView historyScroll;
 
     public bool isOpen = false;
 
@@ -30,31 +40,49 @@ public class LaptopManager : MonoBehaviour
     private void SetupUI()
     {
         if (uiDoc == null || uiDoc.rootVisualElement == null) return;
-
         VisualElement root = uiDoc.rootVisualElement;
         
         laptopContainer = root.Q<VisualElement>("LaptopContainer");
         desktopView = root.Q<VisualElement>("DesktopView");
         statusView = root.Q<VisualElement>("StatusView");
+        questView = root.Q<VisualElement>("QuestView");
         txtSystemStats = root.Q<Label>("Txt_SystemStats");
 
-        // Привязываем ярлыки на рабочем столе
+        // Рабочий стол
         Button btnShop = root.Q<Button>("Btn_ShopApp");
         if (btnShop != null) btnShop.clicked += OpenShopApp;
 
         Button btnStatus = root.Q<Button>("Btn_StatusApp");
         if (btnStatus != null) btnStatus.clicked += OpenStatusApp;
 
-        // Кнопка закрытия окна статуса
+        Button btnQuest = root.Q<Button>("Btn_QuestApp");
+        if (btnQuest != null) btnQuest.clicked += OpenQuestApp;
+
+        // Закрытие окон
         Button btnCloseStatus = root.Q<Button>("Btn_CloseStatus");
         if (btnCloseStatus != null) btnCloseStatus.clicked += CloseAppToDesktop;
+
+        Button btnCloseQuest = root.Q<Button>("Btn_CloseQuest");
+        if (btnCloseQuest != null) btnCloseQuest.clicked += CloseAppToDesktop;
+
+        // Квесты
+        txtQuestTitle = root.Q<Label>("Txt_ActiveQuestTitle");
+        txtQuestDesc = root.Q<Label>("Txt_ActiveQuestDesc");
+        txtQuestFeedback = root.Q<Label>("Txt_QuestFeedback");
+        txtGlobalRating = root.Q<Label>("Txt_GlobalRating");
+        btnAcceptQuest = root.Q<Button>("Btn_AcceptQuest");
+        btnCompleteQuest = root.Q<Button>("Btn_CompleteQuest");
+        historyScroll = root.Q<ScrollView>("HistoryScroll");
+
+        if (btnAcceptQuest != null) btnAcceptQuest.clicked += OnAcceptQuestClicked;
+        if (btnCompleteQuest != null) btnCompleteQuest.clicked += OnCompleteQuestClicked;
     }
 
     public void OpenLaptop()
     {
         isOpen = true;
         laptopContainer.style.display = DisplayStyle.Flex;
-        CloseAppToDesktop(); // Всегда начинаем с рабочего стола
+        CloseAppToDesktop(); 
 
         UnityEngine.Cursor.lockState = CursorLockMode.None;
         UnityEngine.Cursor.visible = true;
@@ -71,19 +99,12 @@ public class LaptopManager : MonoBehaviour
         if (playerInputManager != null) playerInputManager.onFoot.Enable();
     }
 
-    // --- ПРИЛОЖЕНИЕ: МАГАЗИН ---
     private void OpenShopApp()
     {
-        // Скрываем ноутбук и открываем наш старый добрый InventoryManager
         laptopContainer.style.display = DisplayStyle.None; 
-        
-        if (InventoryManager.Instance != null)
-        {
-            InventoryManager.Instance.Open();
-        }
+        if (InventoryManager.Instance != null) InventoryManager.Instance.Open();
     }
 
-    // --- ПРИЛОЖЕНИЕ: СОСТОЯНИЕ ПК ---
     private void OpenStatusApp()
     {
         desktopView.style.display = DisplayStyle.None;
@@ -91,101 +112,71 @@ public class LaptopManager : MonoBehaviour
         GenerateReport();
     }
 
-    private void CloseAppToDesktop()
+    // --- ЛОГИКА БИРЖИ ЗАКАЗОВ ---
+    private void OpenQuestApp()
     {
-        desktopView.style.display = DisplayStyle.Flex;
-        statusView.style.display = DisplayStyle.None;
+        desktopView.style.display = DisplayStyle.None;
+        questView.style.display = DisplayStyle.Flex;
+        RefreshQuestUI();
     }
 
-    // --- ГЕНЕРАЦИЯ ОТЧЕТА О СБОРКЕ ---
-    private void GenerateReport()
+    private void OnAcceptQuestClicked()
     {
-        string report = "";
+        if (QuestManager.Instance == null) return;
+        QuestManager.Instance.AcceptRandomQuest();
+        RefreshQuestUI();
+    }
+
+    private void OnCompleteQuestClicked()
+    {
+        if (QuestManager.Instance == null) return;
         
-        // Сканируем всю сцену на наличие Корпусов
-        // Ищем все Корпуса и СОРТИРУЕМ их по времени спавна (от старых к новым)
-        PCCase[] allCases = FindObjectsByType<PCCase>(FindObjectsSortMode.None)
-                            .OrderBy(c => c.spawnTime).ToArray();
+        int stars;
+        string result = QuestManager.Instance.TryCompleteQuest(out stars);
 
-        if (allCases.Length == 0)
+        if (result == "SUCCESS")
         {
-            txtSystemStats.text = "<i>Системные блоки не обнаружены. Закажите корпус для начала сборки.</i>";
-            return;
+            RefreshQuestUI();
+            txtQuestFeedback.text = $"<color=green>Заказ сдан! Вы получили {stars} ⭐</color>";
+        }
+        else
+        {
+            txtQuestFeedback.text = result; // Выводим ошибку (не включается)
+        }
+    }
+
+    private void RefreshQuestUI()
+    {
+        txtQuestFeedback.text = "";
+        txtGlobalRating.text = $"Рейтинг: {QuestManager.Instance.GetAverageRating():F1} ⭐";
+
+        if (QuestManager.Instance.hasActiveQuest)
+        {
+            txtQuestTitle.text = "АКТИВНЫЙ ЗАКАЗ";
+            txtQuestDesc.text = QuestManager.Instance.GetQuestDescription();
+            btnAcceptQuest.style.display = DisplayStyle.None;
+            btnCompleteQuest.style.display = DisplayStyle.Flex;
+        }
+        else
+        {
+            txtQuestTitle.text = "НЕТ АКТИВНЫХ ЗАКАЗОВ";
+            txtQuestDesc.text = "Нажмите 'Найти заказ', чтобы получить новую работу и системный блок для починки.";
+            btnAcceptQuest.style.display = DisplayStyle.Flex;
+            btnCompleteQuest.style.display = DisplayStyle.None;
         }
 
-        int pcCount = 1;
-        foreach (PCCase pcCase in allCases)
+        // Обновляем историю
+        historyScroll.Clear();
+        foreach (string log in QuestManager.Instance.historyLogs)
         {
-            report += $"<b>=== СИСТЕМНЫЙ БЛОК #{pcCount} ({pcCase.data.partName}) ===</b>\n\n";
-            
-            float totalTDP = 0f;
-            float psuPower = 0f;
-            
-            // Ищем все детали, лежащие внутри этого конкретного корпуса
-            PickupItem[] attachedParts = pcCase.GetComponentsInChildren<PickupItem>();
-            
-            bool isEmpty = true;
-            foreach (PickupItem part in attachedParts)
-            {
-                if (part.itemType == ItemType.Case) continue; // Пропускаем сам корпус
-                
-                isEmpty = false;
-                report += $"• <b>{part.itemType}</b>: {part.data.partName}\n";
-                report += $"  <size=18><color=#7f8c8d>Сокет: {part.data.socketType} | TDP: {part.data.tdp}W | Габариты: {part.data.length}x{part.data.width}x{part.data.height}мм</color></size>\n";
-                
-                // --- НОВАЯ ЛОГИКА: ДЕТАЛЬНЫЙ ОТЧЕТ ПО МАТЕРИНСКОЙ ПЛАТЕ ---
-                if (part.itemType == ItemType.Motherboard)
-                {
-                    report += "    <size=18><i>Поддерживаемые слоты:</i>\n";
-                    
-                    // Выводим информацию из JSON
-                    if (part.data.ram_slots > 0)
-                    {
-                        report += $"    <size=18><i>- Слот ОЗУ (DIMM): {part.data.ram_slots} x {part.data.ram_type}</i>\n";
-                    }
-
-                    // Ищем остальные слоты (CPU, GPU и т.д.)
-                    Slot[] otherSlots = part.GetComponentsInChildren<Slot>();
-                    foreach (Slot slot in otherSlots)
-                    {
-                        // Пропускаем слоты ОЗУ, так как мы их уже сгруппировали
-                        if (slot.acceptableSocket == "DDR4" || slot.acceptableSocket == "DDR5") continue;
-                        
-                        report += $"    <size=18><i>- {slot.slotName}: {slot.acceptableSocket}</i>\n";
-                    }
-                    report += "</size>";
-                }
-                // -----------------------------------------------------------------
-
-                if (part.itemType == ItemType.PowerSupply) psuPower = part.data.tdp;
-                else totalTDP += part.data.tdp;
-            }
-
-            if (isEmpty)
-            {
-                report += "<i>Корпус пуст.</i>\n";
-            }
-            else
-            {
-                report += $"\n<b>ЭНЕРГОБАЛАНС СБОРКИ #{pcCount}:</b>\n";
-                report += $"Суммарное потребление: <b>{totalTDP} W</b>\n";
-                report += $"Мощность Блока Питания: <b>{psuPower} W</b>\n";
-
-                float requiredPower = totalTDP * 1.2f; // Запас 20%
-                if (psuPower >= requiredPower)
-                {
-                    report += $"<color=green>✓ Энергобаланс в норме (БП с запасом)</color>\n";
-                }
-                else
-                {
-                    report += $"<color=red>⚠ ОШИБКА: Требуется БП от {requiredPower}W</color>\n";
-                }
-            }
-            report += "\n\n"; // Отступ между разными ПК
-            pcCount++;
+            Label l = new Label(log);
+            l.style.fontSize = 16;
+            l.style.marginBottom = 10;
+            l.style.borderBottomWidth = 1;
+            l.style.borderBottomColor = Color.gray;
+            l.style.whiteSpace = WhiteSpace.Normal;
+            historyScroll.Add(l);
         }
-
-        txtSystemStats.text = report;
     }
 
     public void ReturnToDesktop()
@@ -193,5 +184,67 @@ public class LaptopManager : MonoBehaviour
         laptopContainer.style.display = DisplayStyle.Flex;
         desktopView.style.display = DisplayStyle.Flex;
         statusView.style.display = DisplayStyle.None;
+        questView.style.display = DisplayStyle.None;
+    }
+
+    private void CloseAppToDesktop()
+    {
+        desktopView.style.display = DisplayStyle.Flex;
+        statusView.style.display = DisplayStyle.None;
+        questView.style.display = DisplayStyle.None;
+    }
+
+    // ... (Метод GenerateReport для "Состояния сборки" остается без изменений, я его не копирую для экономии места)
+    private void GenerateReport()
+    {
+        string report = "";
+        PCCase[] allCases = FindObjectsByType<PCCase>(FindObjectsSortMode.None).OrderBy(c => c.spawnTime).ToArray();
+
+        if (allCases.Length == 0)
+        {
+            txtSystemStats.text = "<i>Системные блоки не обнаружены.</i>";
+            return;
+        }
+
+        int pcCount = 1;
+        foreach (PCCase pcCase in allCases)
+        {
+            report += $"<b>=== СИСТЕМНЫЙ БЛОК #{pcCount} ({pcCase.data.partName}) ===</b>\n\n";
+            float totalTDP = 0f, psuPower = 0f;
+            PickupItem[] attachedParts = pcCase.GetComponentsInChildren<PickupItem>();
+            bool isEmpty = true;
+            foreach (PickupItem part in attachedParts)
+            {
+                if (part.itemType == ItemType.Case) continue; 
+                isEmpty = false;
+                report += $"• <b>{part.itemType}</b>: {part.data.partName}\n";
+                if (part.itemType == ItemType.Motherboard)
+                {
+                    report += "    <size=18><i>Поддерживаемые слоты:</i>\n";
+                    if (part.data.ram_slots > 0) report += $"    <size=18><i>- Слот ОЗУ (DIMM): {part.data.ram_slots} x {part.data.ram_type}</i>\n";
+                    Slot[] otherSlots = part.GetComponentsInChildren<Slot>();
+                    foreach (Slot slot in otherSlots)
+                    {
+                        if (slot.acceptableSocket == "DDR4" || slot.acceptableSocket == "DDR5") continue;
+                        report += $"    <size=18><i>- {slot.slotName}: {slot.acceptableSocket}</i>\n";
+                    }
+                    report += "</size>";
+                }
+                if (part.itemType == ItemType.PowerSupply) psuPower = part.data.tdp;
+                else totalTDP += part.data.tdp;
+            }
+
+            if (isEmpty) report += "<i>Корпус пуст.</i>\n";
+            else
+            {
+                report += $"\n<b>ЭНЕРГОБАЛАНС СБОРКИ #{pcCount}:</b>\nСуммарное потребление: <b>{totalTDP} W</b>\nМощность БП: <b>{psuPower} W</b>\n";
+                float req = totalTDP * 1.2f; 
+                if (psuPower >= req) report += $"<color=green>✓ Энергобаланс в норме (БП с запасом)</color>\n";
+                else report += $"<color=red>⚠ ОШИБКА: Требуется БП от {req}W</color>\n";
+            }
+            report += "\n\n"; 
+            pcCount++;
+        }
+        txtSystemStats.text = report;
     }
 }

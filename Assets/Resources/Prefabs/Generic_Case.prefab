@@ -2809,7 +2809,7 @@ GameObject:
   - component: {fileID: 1609612837239496319}
   - component: {fileID: 6395095830245038722}
   m_Layer: 6
-  m_Name: case_standard
+  m_Name: Generic_Case
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2848,15 +2848,22 @@ MonoBehaviour:
   promptMessage: 
   spawnTime: 0
   itemType: 1
-  jsonPartID: case_standard
+  jsonPartID: 
   data:
     partID: 
     partName: Case
     socketType: 
+    form_factor: 
     tdp: 0
     length: 0
     width: 0
     height: 0
+    ram_slots: 0
+    ram_type: 
+    cores: 0
+    frequency: 0
+    vram: 0
+    max_tdp: 0
   currentSlot: {fileID: 0}
   currentCase: {fileID: 0}
   hasMotherboard: 0
