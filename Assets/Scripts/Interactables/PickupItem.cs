@@ -136,4 +136,46 @@ public class PickupItem : Interactable
     {
         if (rb != null) rb.isKinematic = !state;
     }
+
+    public void ReloadDataFromJSON()
+    {
+        if (AssemblyManager.Instance == null) return;
+        
+        data = AssemblyManager.Instance.GetPartInfo(jsonPartID);
+        
+        if (data == null) 
+        {
+            Debug.LogError($"[ГЕНЕРАТОР] Ошибка! ID '{jsonPartID}' не найден в JSON!");
+            data = new PartData { partName = "Ошибка ID: " + jsonPartID, socketType = "Error", tdp = 0 };
+            return;
+        }
+
+        // --- НОВЫЙ БЛОК: ОБНОВЛЕНИЕ ДОЧЕРНИХ СЛОТОВ ---
+        // Если обновилась материнская плата, мы должны обновить сокет у слота Процессора и Кулера
+        if (itemType == ItemType.Motherboard)
+        {
+            // Находим все слоты внутри материнки
+            Slot[] slots = GetComponentsInChildren<Slot>();
+            
+            foreach (Slot slot in slots)
+            {
+                // Нам нужно обновить только те слоты, которые связаны с процессором!
+                // Слоты ОЗУ и Видеокарты (PCIe) трогать не нужно.
+                
+                // Проверяем по имени слота (или можно проверять текущий acceptableSocket)
+                if (slot.slotName == "Разъем процессора (Socket)" || slot.slotName == "Крепление охлаждения (CPU Fan)")
+                {
+                    slot.UpdateSocketFromParent(this);
+                }
+                
+                // --- А ТАКЖЕ АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ ОЗУ ---
+                // Если плата сменилась с DDR4 на DDR5, слоты ОЗУ тоже должны поменяться!
+                if (slot.slotName.Contains("ОЗУ"))
+                {
+                    slot.UpdateSocketFromParent(this);
+                }
+            }
+        }
+        // ----------------------------------------------
+    }
 }

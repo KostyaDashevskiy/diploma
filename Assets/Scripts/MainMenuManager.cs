@@ -10,10 +10,10 @@ public class MainMenuManager : MonoBehaviour
     }
 
     // Метод для запуска второго режима
-    // public void PlayMode2()
-    // {
-    //     SceneManager.LoadScene("GameMode2"); // Укажи точное название своей сцены
-    // }
+    public void PlayMode2()
+    {
+        SceneManager.LoadScene("LearningMode"); // Укажи точное название своей сцены
+    }
 
     // Метод для выхода из игры
     public void ExitGame()

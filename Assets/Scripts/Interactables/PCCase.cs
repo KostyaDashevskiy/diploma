@@ -131,4 +131,37 @@ public class PCCase : PickupItem
             base.Interact(player); 
         }
     }
+
+    // Метод проверяет: Готов ли этот ПК к работе?
+    public bool IsFullyAssembledAndWorking()
+    {
+        if (!hasMotherboard || !hasPSU) return false;
+
+        PickupItem[] attachedParts = GetComponentsInChildren<PickupItem>();
+        
+        bool foundCPU = false, foundGPU = false, foundRAM = false;
+        bool foundCooler = false; // <-- ДОБАВИЛИ ФЛАГ КУЛЕРА
+        
+        float totalTdp = 0f, psuPower = 0f;
+
+        foreach (PickupItem part in attachedParts)
+        {
+            if (part.itemType == ItemType.Case) continue;
+            
+            if (part.itemType == ItemType.CPU) foundCPU = true;
+            if (part.itemType == ItemType.GPU) foundGPU = true;
+            if (part.itemType == ItemType.RAM) foundRAM = true;
+            if (part.itemType == ItemType.Cooler) foundCooler = true; // <-- ПРОВЕРЯЕМ
+            
+            if (part.itemType == ItemType.PowerSupply) psuPower = part.data.tdp;
+            else totalTdp += part.data.tdp;
+        }
+
+        // <-- ТЕПЕРЬ ТРЕБУЕМ НАЛИЧИЕ КУЛЕРА
+        if (!foundCPU || !foundGPU || !foundRAM || !foundCooler) return false; 
+        
+        if (psuPower < (totalTdp * 1.2f)) return false; 
+
+        return true; 
+    }
 }

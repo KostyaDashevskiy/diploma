@@ -11,6 +11,26 @@ public class Slot : Interactable
     public bool isOccupied = false;
     public PickupItem installedItem; 
 
+    private void Start()
+    {
+        // Ищем свою родительскую материнскую плату
+        PickupItem parentMotherboard = GetComponentInParent<PickupItem>();
+
+        if (parentMotherboard != null && parentMotherboard.itemType == ItemType.Motherboard)
+        {
+            // Автоматически настраиваем сокет процессора и кулера
+            if (slotName.Contains("процессора") || slotName.Contains("охлаждения"))
+            {
+                acceptableSocket = parentMotherboard.data.socketType;
+            }
+            // Автоматически настраиваем тип ОЗУ
+            else if (slotName.Contains("ОЗУ"))
+            {
+                acceptableSocket = parentMotherboard.data.ram_type;
+            }
+        }
+    }
+
     public override string GetPromptMessage(PlayerInteract player)
     {
         if (isOccupied) return ""; 
@@ -25,6 +45,8 @@ public class Slot : Interactable
     {
         if (isOccupied) return;
 
+
+        
         if (player.heldItem != null)
         {
             PickupItem itemInHand = player.heldItem;
@@ -94,12 +116,31 @@ public class Slot : Interactable
             {
                 player.ShowTempMessage($"<color=red>Несовместимо! Слот требует {acceptableSocket}, а у детали {itemInHand.data.socketType}</color>", 3f);
             }
+            
         }
+        
+        
     }
 
     public void ClearSlot()
     {
         isOccupied = false;
         installedItem = null;
+    }
+
+    public void UpdateSocketFromParent(PickupItem parentMotherboard)
+    {
+        if (parentMotherboard == null || parentMotherboard.itemType != ItemType.Motherboard) return;
+
+        // Автоматически настраиваем сокет процессора и кулера
+        if (slotName.Contains("процессора") || slotName.Contains("охлаждения"))
+        {
+            acceptableSocket = parentMotherboard.data.socketType;
+        }
+        // Автоматически настраиваем тип ОЗУ
+        else if (slotName.Contains("ОЗУ"))
+        {
+            acceptableSocket = parentMotherboard.data.ram_type;
+        }
     }
 }
