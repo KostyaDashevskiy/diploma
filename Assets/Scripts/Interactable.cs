@@ -19,4 +19,16 @@ public abstract class Interactable : MonoBehaviour
     {
         // Базовая логика переопределяется в наследниках
     }
+
+     // --- НОВЫЕ МЕТОДЫ ДЛЯ ПОДСВЕТКИ ---
+    public virtual void ApplyHighlight(PlayerInteract player)
+    {
+        // Переопределяется в наследниках (в слотах)
+    }
+
+    public virtual void RemoveHighlight()
+    {
+        // Переопределяется в наследниках
+    }
+    
 }

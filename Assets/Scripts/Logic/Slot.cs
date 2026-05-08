@@ -11,23 +11,55 @@ public class Slot : Interactable
     public bool isOccupied = false;
     public PickupItem installedItem; 
 
+    [Header("Визуал для подсветки")]
+    public MeshRenderer visualMesh; // Перетащим сюда кубик, который изображает слот
+    private Color originalColor;
+
     private void Start()
     {
-        // Ищем свою родительскую материнскую плату
-        PickupItem parentMotherboard = GetComponentInParent<PickupItem>();
+        // В URP цвет хранится в переменной _BaseColor
+        if (visualMesh != null) originalColor = visualMesh.material.GetColor("_BaseColor");
 
+        PickupItem parentMotherboard = GetComponentInParent<PickupItem>();
         if (parentMotherboard != null && parentMotherboard.itemType == ItemType.Motherboard)
         {
-            // Автоматически настраиваем сокет процессора и кулера
             if (slotName.Contains("процессора") || slotName.Contains("охлаждения"))
-            {
                 acceptableSocket = parentMotherboard.data.socketType;
-            }
-            // Автоматически настраиваем тип ОЗУ
             else if (slotName.Contains("ОЗУ"))
-            {
                 acceptableSocket = parentMotherboard.data.ram_type;
+        }
+    }
+
+    // --- ПОДСВЕТКА СЛОТА ---
+    public override void ApplyHighlight(PlayerInteract player)
+    {
+        Debug.Log("ЛУЧ ПОПАЛ В СЛОТ: " + slotName); // <-- ДОБАВЬ ЭТО
+
+        if (visualMesh == null || isOccupied) return;
+
+        if (player.heldItem != null)
+        {
+            if (player.heldItem.data.socketType == acceptableSocket)
+            {
+                // Для URP используем SetColor и "_BaseColor"
+                visualMesh.material.SetColor("_BaseColor", new Color(0f, 1f, 0f, 0.6f)); 
             }
+            else 
+            {
+                visualMesh.material.SetColor("_BaseColor", new Color(1f, 0f, 0f, 0.6f)); 
+            }
+        }
+        else
+        {
+            visualMesh.material.SetColor("_BaseColor", new Color(1f, 0.9f, 0f, 0.4f)); 
+        }
+    }
+     public override void RemoveHighlight()
+    {
+        if (visualMesh != null)
+        {
+            // Возвращаем родной цвет
+            visualMesh.material.SetColor("_BaseColor", originalColor);
         }
     }
 
@@ -68,17 +100,16 @@ public class Slot : Interactable
                 {
                     if (itemInHand.data.length > parentCase.data.length)
                     {
-                        player.ShowTempMessage($"<color=red>Видеокарта не влезает в корпус! Макс. длина: {parentCase.data.length}мм, а у детали: {itemInHand.data.length}мм</color>", 4f);
-                        return; // Прерываем установку
+                        player.ShowTempMessage($"<color=red><b>ПРОСТРАНСТВЕННЫЙ КОНФЛИКТ:</b></color>\nВидеокарта ({itemInHand.data.length}мм) упирается в корзины жестких дисков или фронтальные вентиляторы корпуса (лимит {parentCase.data.length}мм). Закрепить ее в слоте PCIe невозможно.", 6f);
+                        return; 
                     }
                 }
-                // Проверяем высоту кулера (ширина корпуса = высота кулера)
                 else if (itemInHand.itemType == ItemType.Cooler)
                 {
                     if (itemInHand.data.height > parentCase.data.width)
                     {
-                        player.ShowTempMessage($"<color=red>Кулер слишком высокий! Корпус вмещает {parentCase.data.width}мм, а кулер {itemInHand.data.height}мм</color>", 4f);
-                        return; // Прерываем установку
+                        player.ShowTempMessage($"<color=red><b>ПРОСТРАНСТВЕННЫЙ КОНФЛИКТ:</b></color>\nТепловые трубки кулера ({itemInHand.data.height}мм) выходят за пределы рамы корпуса (лимит {parentCase.data.width}мм). Боковая стеклянная панель системного блока не закроется.", 6f);
+                        return; 
                     }
                 }
             }
@@ -114,7 +145,27 @@ public class Slot : Interactable
             }
             else
             {
-                player.ShowTempMessage($"<color=red>Несовместимо! Слот требует {acceptableSocket}, а у детали {itemInHand.data.socketType}</color>", 3f);
+                string errorReason = "";
+
+                // Генерируем фундаментальное объяснение в зависимости от типа детали
+                if (itemInHand.itemType == ItemType.CPU)
+                {
+                    errorReason = $"Архитектурная несовместимость! Сокет материнской платы ({acceptableSocket}) физически не совпадает с контактными площадками процессора ({itemInHand.data.socketType}). Попытка установки приведет к замятию контактов (пинов).";
+                }
+                else if (itemInHand.itemType == ItemType.RAM)
+                {
+                    errorReason = $"Электротехнический конфликт! Память {itemInHand.data.socketType} работает на другом напряжении и имеет ключ (прорезь) в другом месте. Вставить ее в слот {acceptableSocket} невозможно.";
+                }
+                else if (itemInHand.itemType == ItemType.Cooler)
+                {
+                    errorReason = $"Конфликт монтажа! Отверстия для крепления на сокете {acceptableSocket} расположены на другом расстоянии, чем требует ваш кулер ({itemInHand.data.socketType}).";
+                }
+                else
+                {
+                    errorReason = $"Интерфейсы несовместимы: слот требует {acceptableSocket}, а деталь имеет {itemInHand.data.socketType}.";
+                }
+
+                player.ShowTempMessage($"<color=red><b>КРИТИЧЕСКАЯ ОШИБКА УСТАНОВКИ:</b></color>\n{errorReason}", 6f);
             }
             
         }

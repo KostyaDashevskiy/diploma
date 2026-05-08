@@ -1628,8 +1628,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7052db8f5b6cb9148b214963343790a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LearningLevelGenerator
-  targetPC: {fileID: 0}
-  ejectPoint: {fileID: 1773701058}
 --- !u!114 &348366785
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1642,8 +1640,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15dcd8c56e5fb164ab9dfe6d35b08704, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LearningModeManager
-  allCasesInScene: []
-  missionCompleted: 0
 --- !u!4 &348366786
 Transform:
   m_ObjectHideFlags: 0
@@ -2720,6 +2716,9 @@ MonoBehaviour:
   xRotation: 0
   xSensitivity: 30
   ySensitivity: 30
+  normalFOV: 60
+  maxZoomFOV: 20
+  zoomSpeed: 10
 --- !u!114 &771045495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4996,10 +4995,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bc510820a61afa4e95e240e55ab1c2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AssemblyManager
-  jsonFile: {fileID: 4900000, guid: e8a7a6a162f2c0e46a8ce25afdb43648, type: 3}
+  serverJsonUrl: https://gist.githubusercontent.com/KostyaDashevskiy/04811c1ebb8357ed30088296fb471603/raw/GlobalPartsDB.json
+  localCustomJson: {fileID: 4900000, guid: e8a7a6a162f2c0e46a8ce25afdb43648, type: 3}
   installedParts: []
   currentPowerSupplyCapacity: 0
   currentTotalTDP: 0
+  isDatabaseReady: 0
 --- !u!1 &1467671550
 GameObject:
   m_ObjectHideFlags: 0
@@ -5567,6 +5568,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LaptopManager
   uiDoc: {fileID: 1571123618}
   playerInputManager: {fileID: 771045484}
+  isLearningMode: 1
   isOpen: 0
 --- !u!114 &1571123618
 MonoBehaviour:
@@ -7281,13 +7283,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1909177537}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.841, y: 1.487, z: -1.398}
+  m_LocalRotation: {x: -0, y: -0.9998976, z: 0, w: -0.0143111115}
+  m_LocalPosition: {x: -0.841, y: 1.286, z: -1.398}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -181.64, z: 0}
 --- !u!1001 &1921408990
 PrefabInstance:
   m_ObjectHideFlags: 0

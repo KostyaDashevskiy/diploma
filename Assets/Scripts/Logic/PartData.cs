@@ -6,6 +6,7 @@ public class PartData
     public string partID;
     public string partName;
     public string socketType;
+    public string imageUrl;
     public string form_factor; // НОВОЕ ПОЛЕ: ATX, Mini-ITX и т.д.
     public float tdp;
      public float length; 

@@ -3085,10 +3085,17 @@ MonoBehaviour:
     partName: "\u041C\u0430\u0442\u0435\u0440\u0438\u043D\u0441\u043A\u0430\u044F
       \u043F\u043B\u0430\u0442\u0430 GIGABYTE B650M D3HP"
     socketType: 
+    form_factor: 
     tdp: 0
     length: 0
     width: 0
     height: 0
+    ram_slots: 0
+    ram_type: 
+    cores: 0
+    frequency: 0
+    vram: 0
+    max_tdp: 0
   currentSlot: {fileID: 0}
   currentCase: {fileID: 0}
 --- !u!65 &3855383002414257765
@@ -3137,7 +3144,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &7646904332777741483
 GameObject:

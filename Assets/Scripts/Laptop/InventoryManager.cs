@@ -83,7 +83,20 @@ public class InventoryManager : MonoBehaviour
 
     private void Start()
     {
-        GenerateCatalogUI(""); 
+        // Не рисуем UI сразу. Ждем сигнала от AssemblyManager!
+        StartCoroutine(WaitForDatabase());
+    }
+
+     private System.Collections.IEnumerator WaitForDatabase()
+    {
+        // Ждем, пока AssemblyManager не скажет, что база полностью скачана и распарсена
+        while (AssemblyManager.Instance == null || !AssemblyManager.Instance.isDatabaseReady)
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        // Как только база готова - генерируем стартовую вкладку "ВСЕ" (пустой префикс)
+        GenerateCatalogUI("");
     }
 
     private void Update()
@@ -159,7 +172,7 @@ public class InventoryManager : MonoBehaviour
         activeBtn.AddToClassList("active");
     }
 
-    private void GenerateCatalogUI(string prefixFilter)
+private void GenerateCatalogUI(string prefixFilter)
     {
         if (gridEl == null || AssemblyManager.Instance == null) return;
         gridEl.Clear(); 
@@ -174,11 +187,36 @@ public class InventoryManager : MonoBehaviour
 
             VisualElement image = new VisualElement();
             image.AddToClassList("card-image");
-            // Sprite partSprite = Resources.Load<Sprite>($"PartImages/{part.partID}");
-            // if (partSprite != null) image.style.backgroundImage = new StyleBackground(partSprite);
-            // --- НОВЫЙ КОД ЗАГРУЗКИ ---
-            // Загружаем как обычную Texture2D (не требует настройки "Sprite (2D and UI)")
+            
+            // --- НОВАЯ УМНАЯ ЗАГРУЗКА КАРТИНОК (С ФОЛЛБЕКОМ) ---
             Texture2D partTex = Resources.Load<Texture2D>($"PartImages/{part.partID}");
+            
+            // Если родной картинки нет, подбираем случайную заглушку из той же категории
+            if (partTex == null)
+            {
+                string fallbackPrefix = "";
+                if (part.partID.StartsWith("cpu")) fallbackPrefix = "cpu_";
+                else if (part.partID.StartsWith("gpu")) fallbackPrefix = "gpu_";
+                else if (part.partID.StartsWith("mb")) fallbackPrefix = "mb_";
+                else if (part.partID.StartsWith("ram")) fallbackPrefix = "ram_";
+                else if (part.partID.StartsWith("cooler")) fallbackPrefix = "cooler_";
+                else if (part.partID.StartsWith("psu")) fallbackPrefix = "psu_";
+                else if (part.partID.StartsWith("case")) fallbackPrefix = "case_";
+
+                Texture2D[] allTextures = Resources.LoadAll<Texture2D>("PartImages");
+                List<Texture2D> validFallbacks = new List<Texture2D>();
+
+                foreach (var tex in allTextures)
+                {
+                    if (tex.name.StartsWith(fallbackPrefix)) validFallbacks.Add(tex);
+                }
+
+                if (validFallbacks.Count > 0)
+                {
+                    partTex = validFallbacks[Random.Range(0, validFallbacks.Count)];
+                    Debug.Log($"[Магазин] Для детали {part.partID} картинка не найдена. Использована заглушка: {partTex.name}");
+                }
+            }
             
             if (partTex != null) 
             {
@@ -186,9 +224,9 @@ public class InventoryManager : MonoBehaviour
             }
             else
             {
-                // Если картинка не найдена, пишем в консоль почему!
-                Debug.LogWarning($"Картинка не найдена! Искал по пути: Assets/Resources/PartImages/{part.partID}");
+                Debug.LogWarning($"Картинка не найдена, и заглушек для категории '{part.partID}' тоже нет!");
             }
+            // ---------------------------------------------------
 
             VisualElement info = new VisualElement();
             info.AddToClassList("card-info");
@@ -196,13 +234,9 @@ public class InventoryManager : MonoBehaviour
             title.AddToClassList("card-title");
             info.Add(title);
 
-            //Label desc = new Label($"Сокет: {part.socketType}\nTDP: {part.tdp} W\nРазмеры: {part.length}x{part.width}x{part.height} мм");
-
-
             // --- УМНОЕ ОПИСАНИЕ КАРТОЧКИ ТОВАРА ---
             string descText = "";
 
-            // 1. Умное название для "Сокета / Форм-фактора"
             if (part.partID.StartsWith("case") || part.partID.StartsWith("psu"))
             {
                 descText += $"<b>Форм-фактор:</b> {part.form_factor}\n";
@@ -216,11 +250,11 @@ public class InventoryManager : MonoBehaviour
             }
             else if (part.partID.StartsWith("gpu"))
             {
-                descText += $"<b>Интерфейс:</b> {part.socketType}\n"; // Для GPU это Интерфейс
+                descText += $"<b>Интерфейс:</b> {part.socketType}\n"; 
             }
             else if (part.partID.StartsWith("ram"))
             {
-                descText += $"<b>Тип памяти:</b> {part.socketType}\n"; // Для RAM это Тип памяти
+                descText += $"<b>Тип памяти:</b> {part.socketType}\n"; 
             }
             else if (part.partID.StartsWith("cooler"))
             {
@@ -228,20 +262,16 @@ public class InventoryManager : MonoBehaviour
             }
             else 
             {
-                // Для процессоров (cpu)
                 descText += $"<b>Сокет:</b> {part.socketType}\n"; 
             }
 
-            // 2. Энергия 
             if (part.tdp > 0) descText += $"<b>Мощность/TDP:</b> {part.tdp} W\n";
             if (part.max_tdp > 0) descText += $"<b>Отвод тепла:</b> {part.max_tdp} W\n";
 
-            // 3. Уникальные характеристики
             if (part.cores > 0) descText += $"<b>Ядра:</b> {part.cores} ({part.frequency} ГГц)\n";
             if (part.vram > 0) descText += $"<b>Видеопамять:</b> {part.vram} ГБ\n";
             if (part.partID.StartsWith("ram")) descText += $"<b>Частота:</b> {part.frequency} МГц\n";
 
-            // 4. Габариты
             if (part.length > 0 && part.width > 0)
             {
                 if (part.partID.StartsWith("case"))
@@ -251,12 +281,10 @@ public class InventoryManager : MonoBehaviour
             }
             else if (part.partID.StartsWith("cooler") && part.height > 0)
             {
-                // У кулеров длина и ширина обычно не так критичны, а вот высота (height) - очень!
                 descText += $"<b>Высота кулера:</b> {part.height} мм\n";
             }
 
             Label desc = new Label(descText);
-
             desc.AddToClassList("card-desc");
             info.Add(desc);
 
@@ -268,6 +296,37 @@ public class InventoryManager : MonoBehaviour
             card.Add(image);
             card.Add(info);
             gridEl.Add(card);
+        }
+    }
+
+    public void ForceRefreshCatalog()
+    {
+        // Просто вызываем наш собственный метод генерации UI
+        GenerateCatalogUI(currentCategoryPrefix);
+    }
+    
+    // --- НОВЫЙ МЕТОД: ВСТАВИТЬ В КОНЕЦ КЛАССА InventoryManager ---
+    // Метод фонового скачивания картинки по ссылке
+    private System.Collections.IEnumerator DownloadImageAndApply(string url, VisualElement imageElement)
+    {
+        using (UnityEngine.Networking.UnityWebRequest request = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(url))
+        {
+            // Ждем пока скачается
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+            {
+                Texture2D downloadedTex = UnityEngine.Networking.DownloadHandlerTexture.GetContent(request);
+                
+                if (imageElement != null && downloadedTex != null)
+                {
+                    imageElement.style.backgroundImage = new StyleBackground(downloadedTex);
+                }
+            }
+            else
+            {
+                Debug.LogError($"[Магазин] Ошибка скачивания картинки по ссылке {url}: {request.error}");
+            }
         }
     }
 

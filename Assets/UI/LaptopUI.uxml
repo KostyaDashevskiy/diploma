@@ -45,7 +45,7 @@
                         
                         <ui:Button name="Btn_AcceptQuest" text="НАЙТИ ЗАКАЗ" style="width: 250px; height: 60px; font-size: 20px; background-color: rgb(46, 204, 113); color: white; border-radius: 10px;" />
                         <ui:Button name="Btn_CompleteQuest" text="СДАТЬ РАБОТУ КЛИЕНТУ" style="width: 250px; height: 60px; font-size: 20px; background-color: rgb(52, 152, 219); color: white; border-radius: 10px; display: none;" />
-                        <ui:Label name="Txt_QuestFeedback" text="" style="font-size: 18px; color: red; margin-top: 20px; -unity-font-style: bold;" />
+                        <ui:Label name="Txt_QuestFeedback" text="" style="font-size: 18px; color: red; margin-top: 20px; -unity-font-style: bold; white-space: normal;" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>

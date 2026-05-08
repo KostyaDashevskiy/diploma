@@ -1,6 +1,5 @@
 {
   "parts":[
-    { "partID": "cpu_i5_12400", "partName": "Intel Core i5-12400F", "socketType": "LGA1700", "tdp": 65, "cores": 6, "frequency": 4.4 },
     { "partID": "cpu_i9_13900k", "partName": "Intel Core i9-13900K", "socketType": "LGA1700", "tdp": 253, "cores": 8, "frequency": 5.8 },
     { "partID": "cpu_r5_5600", "partName": "AMD Ryzen 5 5600X", "socketType": "AM4", "tdp": 65, "cores": 6, "frequency": 4.6 },
     { "partID": "cpu_i7_13700k", "partName": "Intel Core i7-13700K", "socketType": "LGA1700", "tdp": 253, "cores": 8, "frequency": 5.4 },

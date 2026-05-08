@@ -2853,12 +2853,17 @@ MonoBehaviour:
     partID: 
     partName: Case
     socketType: 
+    form_factor: 
     tdp: 0
-    ram_slots: 0
-    ram_type: 
     length: 0
     width: 0
     height: 0
+    ram_slots: 0
+    ram_type: 
+    cores: 0
+    frequency: 0
+    vram: 0
+    max_tdp: 0
   currentSlot: {fileID: 0}
   currentCase: {fileID: 0}
   hasMotherboard: 0
@@ -2890,7 +2895,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!65 &6395095830245038722
 BoxCollider:

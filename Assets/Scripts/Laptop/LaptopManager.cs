@@ -9,6 +9,8 @@ public class LaptopManager : MonoBehaviour
     [SerializeField] private UIDocument uiDoc;
     public InputManager playerInputManager;
 
+    public bool isLearningMode = false;
+
     private VisualElement laptopContainer;
     private VisualElement desktopView;
     private VisualElement statusView;
@@ -56,7 +58,20 @@ public class LaptopManager : MonoBehaviour
         if (btnStatus != null) btnStatus.clicked += OpenStatusApp;
 
         Button btnQuest = root.Q<Button>("Btn_QuestApp");
-        if (btnQuest != null) btnQuest.clicked += OpenQuestApp;
+
+        if (btnQuest != null) 
+        {
+            // Если мы в обучающем режиме - привязываем клик
+            if (isLearningMode)
+            {
+                btnQuest.clicked += OpenQuestApp;
+            }
+            else
+            {
+                // Если свободный режим - прячем кнопку!
+                btnQuest.style.display = DisplayStyle.None;
+            }
+        }
 
         // Закрытие окон
         Button btnCloseStatus = root.Q<Button>("Btn_CloseStatus");
@@ -239,8 +254,10 @@ public class LaptopManager : MonoBehaviour
             {
                 report += $"\n<b>ЭНЕРГОБАЛАНС СБОРКИ #{pcCount}:</b>\nСуммарное потребление: <b>{totalTDP} W</b>\nМощность БП: <b>{psuPower} W</b>\n";
                 float req = totalTDP * 1.2f; 
-                if (psuPower >= req) report += $"<color=green>✓ Энергобаланс в норме (БП с запасом)</color>\n";
-                else report += $"<color=red>⚠ ОШИБКА: Требуется БП от {req}W</color>\n";
+                if (psuPower >= req) 
+                    report += $"<color=green>✓ Энергобаланс в норме (БП с безопасным запасом)</color>\n";
+                else 
+                    report += $"<color=red><b>⚠ КРИТИЧЕСКАЯ ОШИБКА ПИТАНИЯ (Нехватка мощности)</b>\nБлок питания ({psuPower}W) не справляется с нагрузкой системы. При пиковых нагрузках произойдет просадка напряжения по 12V-линии, сработает защита от перегрузки (OPP/OCP), и компьютер экстренно выключится. Требуется БП от {req}W.</color>\n";
             }
             report += "\n\n"; 
             pcCount++;

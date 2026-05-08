@@ -74,23 +74,15 @@ public class PCCase : PickupItem
 
                 foreach (PickupItem part in attachedParts)
                 {
-                    // Проверяем длинные видеокарты
-                    if (part.itemType == ItemType.GPU)
+                    if (part.itemType == ItemType.GPU && part.data.length > this.data.length)
                     {
-                        if (part.data.length > this.data.length) // this.data - это данные текущего корпуса
-                        {
-                            player.ShowTempMessage($"<color=red>Установка отменена! Установленная видеокарта ({part.data.length}мм) не влезет в этот корпус ({this.data.length}мм).</color>", 4f);
-                            return; // Прерываем установку материнки!
-                        }
+                        player.ShowTempMessage($"<color=red><b>УСТАНОВКА МАТЕРИНСКОЙ ПЛАТЫ ОТМЕНЕНА:</b></color>\nУстановленная видеокарта ({part.data.length}мм) упирается в переднюю панель. Сначала снимите видеокарту, установите плату, и подберите более короткий графический ускоритель.", 6f);
+                        return; 
                     }
-                    // Проверяем высокие кулеры (высота кулера сравнивается с шириной корпуса)
-                    else if (part.itemType == ItemType.Cooler)
+                    else if (part.itemType == ItemType.Cooler && part.data.height > this.data.width)
                     {
-                        if (part.data.height > this.data.width)
-                        {
-                            player.ShowTempMessage($"<color=red>Установка отменена! Башня кулера ({part.data.height}мм) не закроет боковую крышку корпуса ({this.data.width}мм).</color>", 4f);
-                            return; // Прерываем установку материнки!
-                        }
+                        player.ShowTempMessage($"<color=red><b>УСТАНОВКА МАТЕРИНСКОЙ ПЛАТЫ ОТМЕНЕНА:</b></color>\nВысота установленного башенного кулера ({part.data.height}мм) не позволит закрыть боковую крышку этого корпуса. Снимите кулер и подберите низкопрофильную систему охлаждения.", 6f);
+                        return; 
                     }
                 }
                 // -------------------------------------

@@ -9,7 +9,12 @@ public class PlayerInteract : MonoBehaviour
 
     [Header("Настройки инвентаря/рук")]
     public Transform holdPosition; 
-    public PickupItem heldItem;    
+    public PickupItem heldItem;  
+    private Interactable currentTarget; // Запоминаем, на что смотрим  
+
+    private string tempMessage = "";
+    private float tempMessageTimer = 0f;
+
     
     private PlayerUi playerUI;
     private InputManager inputManager;
@@ -75,12 +80,10 @@ public class PlayerInteract : MonoBehaviour
         RaycastHit hitInfo;
         bool lookingAtInteractable = false;
 
-        // Пускаем луч
         if (Physics.Raycast(ray, out hitInfo, distance, mask))
         {
             Interactable interactable = hitInfo.collider.GetComponent<Interactable>();
-
-            // Если луч попал в деталь, которая сейчас у нас в руках - игнорируем!
+            
             if (interactable != null && interactable == heldItem)
             {
                 interactable = null; 
@@ -90,27 +93,57 @@ public class PlayerInteract : MonoBehaviour
             {
                 lookingAtInteractable = true;
                 
-                // Выводим короткий текст в ЦЕНТР
-                playerUI.UpdateCenterPrompt(interactable.GetPromptMessage(this));
+                // --- ЛОГИКА ПОДСВЕТКИ ---
+                // Если мы посмотрели на новый предмет, снимаем подсветку со старого
+                if (interactable != currentTarget)
+                {
+                    if (currentTarget != null) currentTarget.RemoveHighlight();
+                    currentTarget = interactable;
+                }
+                // Применяем подсветку к текущему (каждый кадр, чтобы реагировать на деталь в руках)
+                currentTarget.ApplyHighlight(this);
+                // ------------------------
 
-                // Если это деталь, выводим её статы ВНИЗ СЛЕВА
+                if (tempMessageTimer <= 0) 
+                {
+                    playerUI.UpdateCenterPrompt(interactable.GetPromptMessage(this));
+                }
+
+                // --- 1. ОБЪЯВЛЯЕМ ПЕРЕМЕННУЮ ОДИН РАЗ ---
                 PickupItem pItem = interactable as PickupItem;
+
+                // --- 2. ВЫВОДИМ СТАТЫ ---
                 if (pItem != null)
                 {
                     playerUI.UpdateBottomStats(pItem.GetStatsMessage());
                 }
+                else
+                {
+                    playerUI.UpdateBottomStats(string.Empty);
+                }
 
-                // Логика установки (E)
+                // --- 3. ЛОГИКА ВЗАИМОДЕЙСТВИЯ (E) ---
                 if (inputManager.onFoot.Interact.triggered)
                 {
                     interactable.BaseInteract(this);
                 }
 
-                // Логика извлечения (Q)
+                // --- 4. ЛОГИКА ИЗВЛЕЧЕНИЯ (Q) ---
+                // Здесь мы просто используем уже объявленную pItem
                 if (Keyboard.current.qKey.wasPressedThisFrame && pItem != null)
                 {
                     pItem.Extract(this);
                 }
+            }
+        }
+
+        // --- ЕСЛИ СМОТРИМ В ПУСТОТУ - СНИМАЕМ ПОДСВЕТКУ ---
+        if (!lookingAtInteractable)
+        {
+            if (currentTarget != null)
+            {
+                currentTarget.RemoveHighlight();
+                currentTarget = null;
             }
         }
 
@@ -169,7 +202,7 @@ public class PlayerInteract : MonoBehaviour
         heldItem.transform.SetParent(null);
         Ray ray = new Ray(cam.transform.position, cam.transform.forward);
         if (Physics.Raycast(ray, out RaycastHit hit, distance))
-            heldItem.transform.position = hit.point + hit.normal * 0.1f; 
+            heldItem.transform.position = hit.point + hit.normal * 0.2f; 
         else
             heldItem.transform.position = cam.transform.position + cam.transform.forward * (distance - 0.5f);
 

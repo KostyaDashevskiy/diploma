@@ -1,78 +1,154 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+using UnityEngine.Networking;
+
 public class AssemblyManager : MonoBehaviour
 {
-public static AssemblyManager Instance { get; private set; }
-[Header("База данных (JSON)")]
-public TextAsset jsonFile; // Сюда перетащим наш PartsDB.json в инспекторе
+    public static AssemblyManager Instance { get; private set; }
 
-// Словарь для быстрого поиска детали по её partID
-public Dictionary<string, PartData> database = new Dictionary<string, PartData>();
+    [Header("Облачная база (GitHub RAW URL)")]
+    [Tooltip("Ссылка на твой GlobalPartsDB.json (RAW)")]
+    public string serverJsonUrl = "";
 
-[Header("Текущая сборка")]
-public List<PartData> installedParts = new List<PartData>();
-public float currentPowerSupplyCapacity = 0f; 
-public float currentTotalTDP = 0f;            
+    [Header("Локальная резервная база")]
+    [Tooltip("Перекрывает данные с сервера! Удобно для тестов и модов")]
+    public TextAsset localCustomJson; 
 
-private void Awake()
-{
-    if (Instance == null) Instance = this;
-    else Destroy(gameObject);
+    public Dictionary<string, PartData> database = new Dictionary<string, PartData>();
 
-    LoadJSONDatabase();
-}
+    [Header("Текущая сборка")]
+    public List<PartData> installedParts = new List<PartData>();
+    public float currentPowerSupplyCapacity = 0f; 
+    public float currentTotalTDP = 0f;            
 
-// МЕТОД ЗАГРУЗКИ ИЗ ДИПЛОМА
-private void LoadJSONDatabase()
-{
-    if (jsonFile != null)
+    private string cacheFilePath; 
+    public bool isDatabaseReady = false; 
+
+    private void Awake()
     {
-        PartDatabase db = JsonUtility.FromJson<PartDatabase>(jsonFile.text);
-        foreach (PartData part in db.parts)
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+
+        // Путь для сохранения облачной базы на ПК (AppData/LocalLow/...)
+        cacheFilePath = Path.Combine(Application.persistentDataPath, "GlobalPartsDB_Cache.json");
+    }
+
+    private void Start()
+    {
+        // Запускаем единую очередь загрузки
+        StartCoroutine(LoadDatabaseRoutine());
+    }
+
+    // --- ЕДИНАЯ ОЧЕРЕДЬ ЗАГРУЗКИ ---
+    private IEnumerator LoadDatabaseRoutine()
+    {
+        bool cloudSuccess = false;
+
+        // ШАГ 1: Скачиваем свежую версию с GitHub
+        if (!string.IsNullOrEmpty(serverJsonUrl))
         {
-            // Записываем деталь в словарь (Ключ = partID, Значение = сама деталь)
-            if (!database.ContainsKey(part.partID))
+            string noCacheUrl = serverJsonUrl + "?t=" + Random.Range(1000, 99999);
+            using (UnityWebRequest request = UnityWebRequest.Get(noCacheUrl))
             {
-                database.Add(part.partID, part);
+                // Игнорируем ошибку "Unable to complete SSL connection"
+                request.certificateHandler = new BypassCertificate();
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    string downloadedJson = request.downloadHandler.text;
+                    File.WriteAllText(cacheFilePath, downloadedJson);
+
+                    database.Clear(); 
+                    ParseAndAddToDict(downloadedJson, "GitHub (Свежая версия)");
+                    cloudSuccess = true;
+                }
+                else
+                {
+                    Debug.LogWarning($"<color=red>[Облако]</color> Ошибка скачивания базы: {request.error}.");
+                }
             }
         }
-        Debug.Log($"<color=green>База данных JSON загружена! Найдено деталей: {database.Count}</color>");
+
+        // ШАГ 2: Если интернет не сработал - грузим Кэш
+        if (!cloudSuccess && File.Exists(cacheFilePath))
+        {
+            database.Clear();
+            ParseAndAddToDict(File.ReadAllText(cacheFilePath), "Локальный Кэш");
+        }
+
+        // ШАГ 3: ЛОКАЛЬНЫЙ ПОЛЬЗОВАТЕЛЬСКИЙ ФАЙЛ (Главный приоритет!)
+        // Этот файл прочитается в самом конце. Если в нем есть изменения, они заменят серверные!
+        if (localCustomJson != null && !string.IsNullOrEmpty(localCustomJson.text))
+        {
+            ParseAndAddToDict(localCustomJson.text, "Локальный файл (Моды/Тесты)");
+        }
+
+        // Говорим Магазину, что база полностью загружена и можно рисовать карточки
+        isDatabaseReady = true; 
     }
-    else
+
+    private void ParseAndAddToDict(string jsonText, string sourceName)
     {
-        Debug.LogError("JSON ФАЙЛ НЕ НАЗНАЧЕН В ASSEMBLY MANAGER!");
+        if (string.IsNullOrEmpty(jsonText)) return;
+        try
+        {
+            PartDatabase db = JsonUtility.FromJson<PartDatabase>(jsonText);
+            foreach (PartData part in db.parts)
+            {
+                // Жестко перезаписываем данные: локальный файл перекроет облачный
+                database[part.partID] = part;
+            }
+            Debug.Log($"<color=green>[База Данных]</color> Обработан источник: {sourceName}. Деталей в базе: {database.Count}");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[База Данных] Ошибка парсинга JSON: {e.Message}");
+        }
+    }
+
+    // --- ОСТАЛЬНАЯ ЛОГИКА ---
+
+    public PartData GetPartInfo(string searchID)
+    {
+        if (database.ContainsKey(searchID)) return database[searchID];
+        return null;
+    }
+
+    public void AddPartToAssembly(PartData newPart, ItemType type)
+    {
+        installedParts.Add(newPart);
+        if (type == ItemType.PowerSupply) currentPowerSupplyCapacity = newPart.tdp;
+        else currentTotalTDP += newPart.tdp;
+        CheckPowerBalance();
+    }
+
+    public void RemovePartFromAssembly(PartData removedPart, ItemType type)
+    {
+        installedParts.Remove(removedPart);
+        if (type == ItemType.PowerSupply) currentPowerSupplyCapacity = 0f;
+        else currentTotalTDP -= removedPart.tdp;
+        CheckPowerBalance();
+    }
+
+    public bool CheckPowerBalance()
+    {
+        if (installedParts.Count == 0) return true;
+        float requiredPeakPower = currentTotalTDP * 1.2f;
+
+        if (currentPowerSupplyCapacity >= requiredPeakPower) return true;
+        else return false;
     }
 }
 
-// Метод, который отдаст данные по ID
-public PartData GetPartInfo(string searchID)
+// === КЛАСС ДЛЯ ИГНОРИРОВАНИЯ ОШИБОК SSL ===
+public class BypassCertificate : UnityEngine.Networking.CertificateHandler
 {
-    if (database.ContainsKey(searchID)) return database[searchID];
-    return null;
-}
-
-public void AddPartToAssembly(PartData newPart, ItemType type)
-{
-    installedParts.Add(newPart);
-    if (type == ItemType.PowerSupply) currentPowerSupplyCapacity = newPart.tdp;
-    else currentTotalTDP += newPart.tdp;
-    CheckPowerBalance();
-}
-
-public void RemovePartFromAssembly(PartData removedPart, ItemType type)
-{
-    installedParts.Remove(removedPart);
-    if (type == ItemType.PowerSupply) currentPowerSupplyCapacity = 0f;
-    else currentTotalTDP -= removedPart.tdp;
-    CheckPowerBalance();
-}
-
-public bool CheckPowerBalance()
-{
-    if (installedParts.Count == 0) return true;
-    float requiredPeakPower = currentTotalTDP * 1.2f;
-
-    if (currentPowerSupplyCapacity >= requiredPeakPower) return true;
-    else return false;
-}
+    protected override bool ValidateCertificate(byte[] certificateData)
+    {
+        return true; 
+    }
 }
